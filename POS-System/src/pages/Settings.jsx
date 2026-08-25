@@ -278,7 +278,7 @@ const Settings = () => {
                                         <FileText size={18} color='#64748b' />
                                         <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#475569' }}>EULA DOCUMENT: AINF-EULA-MED-POS-2026-001</span>
                                     </div>
-                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#FF8A1E', background: '#FFF7E6', padding: '4px 10px', borderRadius: '20px' }}>v1.0.2 STABLE</span>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#FF8A1E', background: '#FFF7E6', padding: '4px 10px', borderRadius: '20px' }}>v1.0.0 STABLE</span>
                                 </div>
 
                                 <div style={{ maxHeight: '700px', overflowY: 'auto', padding: '40px', color: '#1e293b', background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', fontFamily: '"Courier New", monospace', fontSize: '13px', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>
@@ -312,7 +312,7 @@ END-USER SOFTWARE LICENSE AGREEMENT (EULA)
 TEHZEEB SWEETS & SUPER STORE — POINT OF SALE
 ════════════════════════════════════════════════════════════════════════
 
-Version        : 1.0.2 Stable
+Version        : 1.0.0 Stable
 Effective Date : 2026
 Jurisdiction   : Islamic Republic of Pakistan
 
