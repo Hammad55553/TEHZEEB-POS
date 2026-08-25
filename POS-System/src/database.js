@@ -18,7 +18,7 @@
  */
 
 const localApiBase = typeof localStorage !== 'undefined' ? localStorage.getItem('tehzeeb_server_ip') : null;
-const API_BASE = localApiBase || (typeof window !== 'undefined' && window.__POS_API_BASE__) || `http://${window.location.hostname}:8000`;
+const API_BASE = localApiBase || (typeof window !== 'undefined' && window.__POS_API_BASE__) || `http://${window.location.hostname || '127.0.0.1'}:8000`;
 
 const TOKEN_KEY = 'tehzeeb_auth_token';
 const SESSION_KEY = 'tehzeeb_auth_session';
