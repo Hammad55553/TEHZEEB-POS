@@ -30,7 +30,7 @@ app.whenReady().then(() => {
   createWindow();
 
   if (!isDev) {
-    autoUpdater.checkForUpdatesAndNotify();
+    // autoUpdater.checkForUpdatesAndNotify();
   }
 
   app.on('activate', () => {
