@@ -451,7 +451,6 @@ const OrderManagement = () => {
                         style={{
                             padding: '8px 18px',
                             borderRadius: '12px',
-                            border: 'none',
                             fontWeight: 800,
                             fontSize: '0.75rem',
                             cursor: 'pointer',

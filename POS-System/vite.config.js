@@ -16,7 +16,7 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'redux-vendor': ['@reduxjs/toolkit', 'react-redux'],
-          'database-vendor': ['@database/database-js'],
+          'database-vendor': ['@supabase/supabase-js'],
           'excel-vendor': ['exceljs', 'xlsx'],
           'ui-vendor': ['framer-motion', 'lucide-react', 'react-hot-toast'],
         },
