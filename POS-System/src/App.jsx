@@ -64,9 +64,46 @@ const PageLoader = () => (
 
 // welcome start-up sound removed
 
+const LockScreen = ({ message }) => (
+  <div style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundColor: '#0f172a', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
+    <h1 style={{ color: '#ef4444', fontSize: '3.5rem', fontWeight: '900', marginBottom: '20px', letterSpacing: '2px' }}>SYSTEM BLOCKED</h1>
+    <p style={{ fontSize: '1.5rem', textAlign: 'center', maxWidth: '80%', color: '#f8fafc', fontWeight: '600' }}>{message || "Pending Payment"}</p>
+    <p style={{ marginTop: '50px', color: '#64748b', fontSize: '0.9rem' }}>Please contact the developer/administrator to resolve this issue and unlock the system.</p>
+  </div>
+);
+
 function AppContent() {
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector(state => state.auth);
+
+  // REMOTE KILL SWITCH
+  const [isLocked, setIsLocked] = useState(localStorage.getItem('tehzeeb_system_locked') === 'true');
+  const [lockMessage, setLockMessage] = useState(localStorage.getItem('tehzeeb_lock_message') || 'Pending Payment');
+
+  useEffect(() => {
+    // 🔴 DANGER: URL for the kill switch. Create a secret GitHub Gist with raw JSON: {"locked": true, "message": "Payment Pending"}
+    // If you don't want to use it right now, you can leave it. It will fail silently and stay unlocked.
+    const KILL_SWITCH_URL = "https://raw.githubusercontent.com/Hammad55553/TEHZEEB-POS/main/killswitch.json"; 
+    
+    fetch(KILL_SWITCH_URL, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.locked === true) {
+          setIsLocked(true);
+          setLockMessage(data.message || 'Pending Payment');
+          localStorage.setItem('tehzeeb_system_locked', 'true');
+          localStorage.setItem('tehzeeb_lock_message', data.message || 'Pending Payment');
+        } else if (data && data.locked === false) {
+          setIsLocked(false);
+          localStorage.setItem('tehzeeb_system_locked', 'false');
+        }
+      })
+      .catch(() => { /* Silent fail: use local cached status */ });
+  }, []);
+
+  if (isLocked) {
+    return <LockScreen message={lockMessage} />;
+  }
 
   // Apply saved appearance/format (menu colors, background, zoom) on load
   useEffect(() => {

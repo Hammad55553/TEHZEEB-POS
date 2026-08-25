@@ -128,7 +128,7 @@ const Settings = () => {
                         Software Documentation
                     </button>
                     
-                    <button 
+                    <button
                         onClick={() => setActiveTab('network')}
                         style={{ width: '100%', padding: '14px', background: activeTab === 'network' ? '#f5f3ff' : 'transparent', border: 'none', borderRadius: '10px', color: activeTab === 'network' ? '#7c3aed' : '#64748b', fontWeight: 800, textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: '0.2s' }}
                     >
@@ -136,9 +136,13 @@ const Settings = () => {
                         Network Setup (LAN)
                     </button>
 
-                    <div style={{ marginTop: '30px' }}>
-                        <UpdateChecker />
-                    </div>
+                    <button 
+                        onClick={() => setActiveTab('updates')}
+                        style={{ width: '100%', padding: '14px', background: activeTab === 'updates' ? '#e0f2fe' : 'transparent', border: 'none', borderRadius: '10px', color: activeTab === 'updates' ? '#0284c7' : '#64748b', fontWeight: 800, textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: '0.2s' }}
+                    >
+                        <Download size={18} />
+                        Software Updates
+                    </button>
                 </div>
 
                 {/* Main Content */}
@@ -280,6 +284,16 @@ const Settings = () => {
                                 <div style={{ maxHeight: '700px', overflowY: 'auto', padding: '40px', color: '#1e293b', background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', fontFamily: '"Courier New", monospace', fontSize: '13px', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>
                                     {EULA_CONTENT}
                                 </div>
+                            </div>
+                        </div>
+                    ) : activeTab === 'updates' ? (
+                        <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                            <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9' }}>
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><Download size={20} color="#0284c7" /> Software Updates</h3>
+                                <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Check for and install the latest versions of the POS system.</p>
+                            </div>
+                            <div style={{ maxWidth: '400px' }}>
+                                <UpdateChecker />
                             </div>
                         </div>
                     ) : (

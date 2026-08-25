@@ -13,7 +13,13 @@ const UpdateChecker = () => {
         if (!ipcRenderer) return;
 
         const handleMessage = (event, msg) => {
-            setMessage(msg);
+            if (msg.includes('HttpError: 404')) {
+                setMessage('No updates found or repository is private.');
+            } else if (msg.includes('Error')) {
+                setMessage('Failed to check for updates.');
+            } else {
+                setMessage(msg);
+            }
             console.log('Update Msg:', msg);
         };
 

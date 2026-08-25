@@ -41,12 +41,14 @@ function createWindow() {
   mainWindow.setMenuBarVisibility(false);
 }
 
+let isManualCheck = false;
+
 app.whenReady().then(() => {
   startBackend();
   createWindow();
 
   if (!isDev) {
-    // autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdatesAndNotify();
   }
 
   app.on('activate', () => {
@@ -66,35 +68,45 @@ app.on('before-quit', () => {
 
 // AUTO-UPDATER EVENTS
 autoUpdater.on('checking-for-update', () => {
-  mainWindow.webContents.send('update-message', 'Checking for updates...');
+  if (isManualCheck && mainWindow) mainWindow.webContents.send('update-message', 'Checking for updates...');
 });
 
 autoUpdater.on('update-available', (info) => {
-  mainWindow.webContents.send('update-message', 'Update Available. Downloading...');
-  mainWindow.webContents.send('update-available', info);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-message', 'Update Available. Downloading...');
+    mainWindow.webContents.send('update-available', info);
+  }
 });
 
 autoUpdater.on('update-not-available', () => {
-  mainWindow.webContents.send('update-message', 'System is up to date.');
+  if (isManualCheck && mainWindow) {
+    mainWindow.webContents.send('update-message', 'System is up to date.');
+    mainWindow.webContents.send('update-not-available');
+  }
 });
 
 autoUpdater.on('error', (err) => {
-  mainWindow.webContents.send('update-message', 'Error in auto-update: ' + err);
+  if (isManualCheck && mainWindow) {
+    mainWindow.webContents.send('update-message', 'Error in auto-update: ' + err);
+  }
 });
 
 autoUpdater.on('download-progress', (progress) => {
-  mainWindow.webContents.send('download-progress', progress);
+  if (mainWindow) mainWindow.webContents.send('download-progress', progress);
 });
 
 autoUpdater.on('update-downloaded', () => {
-  mainWindow.webContents.send('update-message', 'Update Downloaded. Restart to apply.');
-  mainWindow.webContents.send('update-downloaded');
+  if (mainWindow) {
+    mainWindow.webContents.send('update-message', 'Update Downloaded. Restart to apply.');
+    mainWindow.webContents.send('update-downloaded');
+  }
 });
 
 // IPC LISTENERS
 ipcMain.on('check-for-updates', () => {
+  isManualCheck = true;
   if (isDev) {
-    mainWindow.webContents.send('update-message', 'Running in Dev mode. Update skipped.');
+    if (mainWindow) mainWindow.webContents.send('update-message', 'Running in Dev mode. Update skipped.');
   } else {
     autoUpdater.checkForUpdates();
   }
