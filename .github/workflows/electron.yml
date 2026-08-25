@@ -33,7 +33,7 @@ jobs:
       run: npm run build-app -- --win
 
     - name: Upload Windows EXE
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: TEHZEEB-POS-Windows-EXE
         path: ./POS-System/dist_desktop/*.exe
