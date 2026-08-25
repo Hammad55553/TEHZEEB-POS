@@ -1,0 +1,26 @@
+name: CD Pipeline (Deployment)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    
+    # ⚠️ NOTE FOR USER: This is a placeholder CD pipeline.
+    # To deploy to Vercel/Render/VPS, you will need to add the specific steps here.
+    # For example, for Vercel, you would use: amondnet/vercel-action@v20
+    # For VPS, you would use: appleboy/ssh-action@v1.0.0
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deployment Placeholder
+      run: |
+        echo "========================================="
+        echo "🚀 DEPLOYMENT PIPELINE TRIGGERED!"
+        echo "This is a placeholder."
+        echo "Please configure your deployment platform (Vercel/Render/VPS) in .github/workflows/cd.yml."
+        echo "========================================="
