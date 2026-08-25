@@ -94,6 +94,25 @@ const Sidebar = () => {
                     <div style={{ fontSize: '0.55rem', fontWeight: 800, opacity: 0.75 }}>{(user?.role || '').toUpperCase()}</div>
                     <div style={{ fontSize: '0.78rem', fontWeight: 900, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{user?.name}</div>
                 </div>
+                
+                <button
+                    onClick={() => {
+                        if (!navigator.onLine) {
+                            import('react-hot-toast').then(({ default: toast }) => {
+                                toast.error("NO INTERNET: Please connect to the internet to unlock Premium Cloud Features.", { duration: 5000, style: { background: '#ef4444', color: 'white' } });
+                            });
+                        } else {
+                            import('react-hot-toast').then(({ default: toast }) => {
+                                toast.success("Cloud connected! Premium features will be available in the next update.", { duration: 4000 });
+                            });
+                        }
+                    }}
+                    title="Premium Cloud Features"
+                    style={{ background: 'linear-gradient(135deg, #FF8A1E, #D65A00)', border: 'none', color: '#fff', width: '34px', height: '34px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                </button>
+
                 <button
                     onClick={() => dispatch(logout())}
                     title="Logout"
