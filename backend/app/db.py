@@ -41,8 +41,14 @@ def init_pool():
     _apply_schema()
 
 
+def _get_base_path():
+    import sys
+    if hasattr(sys, '_MEIPASS'):
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent.parent
+
 def _apply_schema():
-    schema_path = Path(__file__).resolve().parent.parent / "schema.sql"
+    schema_path = _get_base_path() / "schema.sql"
     sql = schema_path.read_text(encoding="utf-8")
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute(sql)

@@ -18,6 +18,12 @@
     "directories": {
       "output": "dist_desktop"
     },
+    "extraResources": [
+      {
+        "from": "server.exe",
+        "to": "server.exe"
+      }
+    ],
     "publish": [
       {
         "provider": "github",

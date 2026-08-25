@@ -3,7 +3,22 @@ const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const isDev = !app.isPackaged;
 
+const { spawn } = require('child_process');
 let mainWindow;
+let backendProcess = null;
+
+function startBackend() {
+  if (isDev) return;
+  const backendPath = path.join(process.resourcesPath, 'server.exe');
+  
+  backendProcess = spawn(backendPath, [], {
+    detached: false,
+    windowsHide: true,
+  });
+
+  backendProcess.stdout.on('data', (data) => console.log(`Backend: ${data}`));
+  backendProcess.stderr.on('data', (data) => console.error(`Backend Error: ${data}`));
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -27,6 +42,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  startBackend();
   createWindow();
 
   if (!isDev) {
@@ -40,6 +56,12 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+  if (backendProcess) {
+    backendProcess.kill();
+  }
 });
 
 // AUTO-UPDATER EVENTS
