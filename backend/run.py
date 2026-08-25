@@ -1,7 +1,8 @@
 """Entry point: python run.py  (starts the local POS backend)."""
 import uvicorn
 from app import config
+from app.main import app
 
 if __name__ == "__main__":
     print(f"Starting {config.APP_NAME} backend on http://{config.HOST}:{config.PORT}")
-    uvicorn.run("app.main:app", host=config.HOST, port=config.PORT, reload=False)
+    uvicorn.run(app, host=config.HOST, port=config.PORT, reload=False)

@@ -26,7 +26,7 @@ jobs:
       working-directory: ./backend
       run: |
         pip install -r requirements.txt
-        pyinstaller --noconfirm --onefile --windowed --name server --add-data "schema.sql;." run.py
+        pyinstaller --noconfirm --onefile --name server --add-data "schema.sql;." run.py
         cp dist/server.exe ../POS-System/server.exe
     - name: Use Node.js
       uses: actions/setup-node@v4
