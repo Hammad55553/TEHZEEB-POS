@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     LayoutDashboard, Package, ShoppingCart, History, RotateCcw, Settings, Timer,
     FileText, TrendingUp, Truck, Camera, ShieldAlert, BookOpen, Users, Users2,
-    Wallet, Trash2, Layers, LogOut, Sliders, X, Menu
+    Wallet, Trash2, Layers, LogOut, Sliders, X, Menu, Cloud
 } from 'lucide-react';
 import { logout } from '../store/slices/authSlice';
 import logo from '../assets/tehzeeb_logo.png';
@@ -16,6 +16,7 @@ const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
 
     const isAdmin = user?.role === 'admin';
     const permissions = user?.permissions || [];
