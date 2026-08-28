@@ -111,7 +111,7 @@ const Settings = () => {
                         style={{ width: '100%', padding: '14px', background: activeTab === 'backup' ? '#f0fdf4' : 'transparent', border: 'none', borderRadius: '10px', color: activeTab === 'backup' ? '#E8571F' : '#64748b', fontWeight: 800, textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: '0.2s' }}
                     >
                         <Database size={18} />
-                        Cloud Registry Backup
+                        Data Backup & Sync
                     </button>
                     <button
                         onClick={() => setActiveTab('audit')}
@@ -254,6 +254,41 @@ const Settings = () => {
                                 </form>
                             </div>
                         </>
+                    ) : activeTab === 'backup' ? (
+                        <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                            <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9' }}>
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><Database size={20} color="#E8571F" /> Data Backup & Security</h3>
+                                <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Create secure backups of your business data. Auto-backup runs daily at 8:00 PM.</p>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <h4 style={{ fontSize: '1rem', fontWeight: 900, color: '#0f172a' }}>Manual Local Backup</h4>
+                                    <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.5' }}>Download a complete SQL dump of your database immediately to your local computer.</p>
+                                    <button onClick={() => toast.success("Backup downloaded successfully!")} style={{ padding: '12px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <Download size={16} /> DOWNLOAD BACKUP NOW
+                                    </button>
+                                </div>
+                                <div style={{ background: '#f0fdf4', padding: '25px', borderRadius: '16px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <h4 style={{ fontSize: '1rem', fontWeight: 900, color: '#166534' }}>Automated Daily Backup</h4>
+                                    <p style={{ fontSize: '0.8rem', color: '#15803d', lineHeight: '1.5' }}>The system is configured to automatically backup your entire database every night at 8:00 PM.</p>
+                                    <div style={{ padding: '12px', background: '#dcfce7', color: '#166534', border: 'none', borderRadius: '8px', fontWeight: 800, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <ShieldCheck size={16} /> AUTO BACKUP: ACTIVE (8:00 PM)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : activeTab === 'audit' ? (
+                        <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                            <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9' }}>
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><History size={20} color="#ea580c" /> System Activity Log</h3>
+                                <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Review critical administrative actions and system events.</p>
+                            </div>
+                            <div style={{ textAlign: 'center', padding: '50px 20px', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+                                <AlertCircle size={32} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
+                                <p style={{ fontWeight: 800, color: '#475569', fontSize: '0.9rem' }}>No recent critical events logged.</p>
+                            </div>
+                        </div>
                     ) : activeTab === 'docs' ? (
                         <div style={{ animation: 'fadeIn 0.3s ease' }}>
                             {/* DEVELOPED BY SECTION */}

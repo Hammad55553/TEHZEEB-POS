@@ -650,6 +650,7 @@ const POS = () => {
                     {!isMobile && (
                         <div className="nav-scroll-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', whiteSpace: 'nowrap', flex: 1, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                             {[
+                                { label: 'Calculator', icon: Calculator, action: 'calc', perm: 'pos' },
                                 { label: 'New Sale', icon: ShoppingCart, to: '/pos', perm: 'pos' },
                                 { label: 'Invoice', icon: History, to: '/invoice', perm: 'pos' },
                                 { label: 'Sale Return', icon: RefreshCw, to: '/returns', perm: 'pos' },
@@ -671,7 +672,7 @@ const POS = () => {
                                 return (
                                     <button
                                         key={i}
-                                        onClick={() => navigate(b.to)}
+                                        onClick={() => b.action === 'calc' ? dispatch(openCalculator()) : navigate(b.to)}
                                         title={b.label}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: '6px',
@@ -702,14 +703,7 @@ const POS = () => {
                                     <div style={{ height: '28px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}></div>
                                 </>
                             )}
-                            <button
-                                onClick={() => dispatch(openCalculator())}
-                                title="Calculator (F3)"
-                                style={{ background: '#FF8A1E', border: 'none', color: 'white', width: '34px', height: '34px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                                <Calculator size={16} />
-                            </button>
-                            {/* REPRINT LAST RECEIPT */}
+                            {/* FAST / FULLSCREEN MODE */}
                             <button
                                 onClick={handleReprintLast}
                                 disabled={!lastSale}
@@ -729,7 +723,6 @@ const POS = () => {
                         </div>
                     ) : (
                         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-                            <button onClick={() => dispatch(openCalculator())} style={{ background: '#FF8A1E', border: 'none', color: 'white', padding: '8px', borderRadius: '6px' }}><Calculator size={18} /></button>
                             <button onClick={() => setShowParkedList(true)} style={{ background: '#334155', border: 'none', color: 'white', padding: '8px', borderRadius: '6px' }}><Pause size={18} /></button>
                         </div>
                     )}

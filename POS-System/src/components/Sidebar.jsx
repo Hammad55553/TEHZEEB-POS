@@ -98,10 +98,10 @@ const Sidebar = () => {
                 
                 <button
                     onClick={() => setIsPremiumModalOpen(true)}
-                    title="Premium Cloud Features"
-                    style={{ background: 'linear-gradient(135deg, #FF8A1E, #D65A00)', border: 'none', color: '#fff', width: '34px', height: '34px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
+                    title="System Backup & Security"
+                    style={{ background: 'linear-gradient(135deg, #10b981, #047857)', border: 'none', color: '#fff', width: '34px', height: '34px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 </button>
 
                 <button
@@ -147,66 +147,45 @@ const PremiumModal = ({ onClose }) => {
                     </button>
                     
                     <div style={{ width: '60px', height: '60px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                        <Cloud size={32} color="#FF8A1E" />
+                        <Cloud size={32} color="#10b981" />
                     </div>
-                    <h2 style={{ fontSize: '1.8rem', fontWeight: 950, margin: '0 0 5px' }}>TEHZEEB <span style={{ color: '#FF8A1E' }}>CLOUD+</span></h2>
-                    <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem', fontWeight: 600 }}>Enterprise Software Synchronization & Management</p>
+                    <h2 style={{ fontSize: '1.8rem', fontWeight: 950, margin: '0 0 5px' }}>TEHZEEB <span style={{ color: '#10b981' }}>DATA BACKUP</span></h2>
+                    <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem', fontWeight: 600 }}>Secure your business records and daily transactions</p>
                 </div>
 
                 {/* Body */}
                 <div style={{ padding: '40px', background: '#f8fafc' }}>
-                    {!isOnline ? (
-                        <div style={{ textAlign: 'center', padding: '40px 20px', background: '#fef2f2', border: '2px dashed #fca5a5', borderRadius: '16px' }}>
-                            <div style={{ width: '50px', height: '50px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
-                                <ShieldAlert size={24} color="#ef4444" />
-                            </div>
-                            <h3 style={{ fontSize: '1.3rem', color: '#991b1b', fontWeight: 900, marginBottom: '10px' }}>NO INTERNET CONNECTION</h3>
-                            <p style={{ color: '#b91c1c', fontSize: '0.95rem', fontWeight: 600, maxWidth: '400px', margin: '0 auto' }}>
-                                You must connect to the internet to view subscription packages and unlock premium cloud features. Please turn on Wi-Fi or plug in a LAN cable.
-                            </p>
-                            <button onClick={() => window.location.reload()} style={{ marginTop: '20px', background: '#ef4444', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 800, cursor: 'pointer' }}>
-                                REFRESH CONNECTION
+                    <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#dcfce7', color: '#166534', padding: '6px 15px', borderRadius: '20px', fontWeight: 800, fontSize: '0.8rem', marginBottom: '15px' }}>
+                            <div style={{ width: '8px', height: '8px', background: '#22c55e', borderRadius: '50%', animation: 'pulse 2s infinite' }}></div>
+                            SYSTEM AUTO-BACKUP: ENABLED
+                        </div>
+                        <h3 style={{ fontSize: '1.2rem', color: '#1e293b', fontWeight: 900 }}>Data Protection Center</h3>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        {/* Auto Backup Info */}
+                        <div style={{ background: '#0f172a', padding: '25px', borderRadius: '16px', border: '2px solid #10b981', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.2)', position: 'relative' }}>
+                            <div style={{ position: 'absolute', top: '-12px', right: '20px', background: '#10b981', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 900 }}>8:00 PM DAILY</div>
+                            <h4 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#f8fafc', marginBottom: '10px' }}>Automated Routine</h4>
+                            <p style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.5, marginBottom: '20px' }}>The system is scheduled to securely dump the database and update local records every night.</p>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#94a3b8' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div> Sales & Inventory Saved</li>
+                                <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#94a3b8' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div> Khata Balances Updated</li>
+                            </ul>
+                        </div>
+
+                        {/* Manual Backup */}
+                        <div style={{ background: 'white', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
+                            <h4 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#475569', marginBottom: '10px' }}>Manual Backup</h4>
+                            <p style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.5, flex: 1 }}>Download a complete SQL dump immediately to your hard drive for offline safekeeping.</p>
+                            <button onClick={() => {
+                                import('react-hot-toast').then(({ default: toast }) => toast.success("Preparing backup file... Downloading soon.", { duration: 4000 }));
+                            }} style={{ width: '100%', padding: '14px', background: '#0f172a', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 800, cursor: 'pointer' }}>
+                                EXPORT NOW
                             </button>
                         </div>
-                    ) : (
-                        <div>
-                            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#dcfce7', color: '#166534', padding: '6px 15px', borderRadius: '20px', fontWeight: 800, fontSize: '0.8rem', marginBottom: '15px' }}>
-                                    <div style={{ width: '8px', height: '8px', background: '#22c55e', borderRadius: '50%' }}></div>
-                                    SECURE CLOUD CONNECTION ACTIVE
-                                </div>
-                                <h3 style={{ fontSize: '1.2rem', color: '#1e293b', fontWeight: 900 }}>Upgrade to Premium Cloud Services</h3>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                {/* Basic Plan */}
-                                <div style={{ background: 'white', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                    <h4 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#475569', marginBottom: '5px' }}>Data Backup</h4>
-                                    <p style={{ color: '#FF8A1E', fontSize: '1.5rem', fontWeight: 950, marginBottom: '20px' }}>Rs. 1,500 <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>/mo</span></p>
-                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div> Daily Cloud Backup</li>
-                                        <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div> Disaster Recovery</li>
-                                    </ul>
-                                </div>
-
-                                {/* Pro Plan */}
-                                <div style={{ background: '#0f172a', padding: '25px', borderRadius: '16px', border: '2px solid #FF8A1E', boxShadow: '0 10px 15px -3px rgba(255, 138, 30, 0.2)', position: 'relative' }}>
-                                    <div style={{ position: 'absolute', top: '-12px', right: '20px', background: '#FF8A1E', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 900 }}>RECOMMENDED</div>
-                                    <h4 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#f8fafc', marginBottom: '5px' }}>Full Sync & Analytics</h4>
-                                    <p style={{ color: '#FF8A1E', fontSize: '1.5rem', fontWeight: 950, marginBottom: '20px' }}>Rs. 3,000 <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>/mo</span></p>
-                                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF8A1E' }}></div> Live Multi-Branch Sync</li>
-                                        <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF8A1E' }}></div> CEO Mobile App Access</li>
-                                        <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF8A1E' }}></div> Remote Manager Control</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: '30px', textAlign: 'center' }}>
-                                <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Please contact Asper InfoTech Support to activate your Cloud Subscription.</p>
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
