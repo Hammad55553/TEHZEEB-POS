@@ -124,6 +124,16 @@ export default Sidebar;
 
 const PremiumModal = ({ onClose }) => {
     const isOnline = navigator.onLine;
+    
+    const storedTime = localStorage.getItem('tehzeeb_backup_time') || '20:00';
+    const formatTime = (timeString) => {
+        const [hourString, minute] = timeString.split(':');
+        const hour = parseInt(hourString, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const formattedHour = hour % 12 || 12;
+        return `${formattedHour}:${minute} ${ampm}`;
+    };
+    const displayTime = formatTime(storedTime);
 
     return (
         <div style={{
@@ -166,9 +176,9 @@ const PremiumModal = ({ onClose }) => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                         {/* Auto Backup Info */}
                         <div style={{ background: '#0f172a', padding: '25px', borderRadius: '16px', border: '2px solid #10b981', boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.2)', position: 'relative' }}>
-                            <div style={{ position: 'absolute', top: '-12px', right: '20px', background: '#10b981', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 900 }}>8:00 PM DAILY</div>
+                            <div style={{ position: 'absolute', top: '-12px', right: '20px', background: '#10b981', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 900 }}>{displayTime} DAILY</div>
                             <h4 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#f8fafc', marginBottom: '10px' }}>Automated Routine</h4>
-                            <p style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.5, marginBottom: '20px' }}>The system is scheduled to securely dump the database and update local records every night.</p>
+                            <p style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.5, marginBottom: '20px' }}>The system is scheduled to securely dump the database and update local records every day.</p>
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#94a3b8' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div> Sales & Inventory Saved</li>
                                 <li style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: '#94a3b8' }}><div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div> Khata Balances Updated</li>

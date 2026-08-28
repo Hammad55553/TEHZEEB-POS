@@ -14,6 +14,7 @@ const Settings = () => {
     const [activeTab, setActiveTab] = useState('security');
     const [isLoading, setIsLoading] = useState(false);
     const [serverIp, setServerIp] = useState("127.0.0.1");
+    const [backupTime, setBackupTime] = useState(localStorage.getItem('tehzeeb_backup_time') || '20:00');
 
     React.useEffect(() => {
         const fetchIp = async () => {
@@ -271,9 +272,26 @@ const Settings = () => {
                                 </div>
                                 <div style={{ background: '#f0fdf4', padding: '25px', borderRadius: '16px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                     <h4 style={{ fontSize: '1rem', fontWeight: 900, color: '#166534' }}>Automated Daily Backup</h4>
-                                    <p style={{ fontSize: '0.8rem', color: '#15803d', lineHeight: '1.5' }}>The system is configured to automatically backup your entire database every night at 8:00 PM.</p>
-                                    <div style={{ padding: '12px', background: '#dcfce7', color: '#166534', border: 'none', borderRadius: '8px', fontWeight: 800, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                        <ShieldCheck size={16} /> AUTO BACKUP: ACTIVE (8:00 PM)
+                                    <p style={{ fontSize: '0.8rem', color: '#15803d', lineHeight: '1.5' }}>Choose when the system should automatically backup your entire database every day.</p>
+                                    
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <input 
+                                            type="time" 
+                                            value={backupTime}
+                                            onChange={(e) => setBackupTime(e.target.value)}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #86efac', fontWeight: 800, color: '#166534', background: 'white' }}
+                                        />
+                                        <button 
+                                            onClick={() => {
+                                                localStorage.setItem('tehzeeb_backup_time', backupTime);
+                                                toast.success("Auto Backup time updated successfully!");
+                                            }}
+                                            style={{ background: '#166534', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '8px', fontWeight: 800, cursor: 'pointer' }}
+                                        >SAVE TIME</button>
+                                    </div>
+
+                                    <div style={{ padding: '12px', background: '#dcfce7', color: '#166534', border: 'none', borderRadius: '8px', fontWeight: 800, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: 'auto' }}>
+                                        <ShieldCheck size={16} /> AUTO BACKUP: ACTIVE
                                     </div>
                                 </div>
                             </div>
