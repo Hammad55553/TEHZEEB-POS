@@ -28,6 +28,7 @@ import {
     Wallet,
     RefreshCw,
     Hash,
+    Calculator,
     Wifi,
     WifiOff
 } from 'lucide-react';
@@ -41,7 +42,7 @@ import { addToShortage } from '../store/slices/shortageSlice';
 import toast from 'react-hot-toast';
 import doneSound from '../assets/Done.ogg';
 
-import { supabase } from '../supabase';
+import { db } from '../database';
 
 
 import logo from '../assets/tehzeeb_logo.png';
@@ -227,6 +228,37 @@ const POS = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [cart, selectedCustomer, cashReceived, globalDiscount, paymentMethod]);
 
+    // GLOBAL BARCODE SCANNER INTERCEPTOR
+    useEffect(() => {
+        let barcodeBuffer = '';
+        let lastKeyTime = 0;
+
+        const handleGlobalScan = (e) => {
+            // Ignore if typing inside input fields (except if they want global override, but usually we let inputs work)
+            const activeTag = document.activeElement.tagName.toLowerCase();
+            if (activeTag === 'input' || activeTag === 'textarea') return;
+
+            const currentTime = new Date().getTime();
+            if (currentTime - lastKeyTime > 100) {
+                barcodeBuffer = ''; // Reset if typing slowly (human)
+            }
+            lastKeyTime = currentTime;
+
+            if (e.key === 'Enter') {
+                if (barcodeBuffer.length > 2) { // valid barcode length
+                    e.preventDefault();
+                    handleBarcodeScan(barcodeBuffer);
+                }
+                barcodeBuffer = '';
+            } else if (e.key.length === 1) { // Normal characters
+                barcodeBuffer += e.key;
+            }
+        };
+
+        window.addEventListener('keypress', handleGlobalScan);
+        return () => window.removeEventListener('keypress', handleGlobalScan);
+    }, [inventory]);
+
     // BARCODE AUTO-SCAN
     // BARCODE SCAN: only act on Enter (scanner sends Enter after code).
     // Exact barcode/id match -> beep + add. No match -> error beep, nothing added.
@@ -394,9 +426,10 @@ const POS = () => {
         }
 
         setIsCheckingOut(true);
-        const saleId = crypto.randomUUID(); // Generate ID locally for offline safety
+        const saleId = Date.now() + Math.floor(Math.random() * 1000); // BIGINT safe ID for Postgres
 
         const saleData = {
+            id: saleId,
             customer_name: selectedCustomer ? selectedCustomer.name : (walkingCustomerName || 'WALK-IN CUSTOMER'),
             customer_id: selectedCustomer?.id || null,
             total: finalTotal,
@@ -421,7 +454,7 @@ const POS = () => {
 
         try {
             // 1. Save main sale
-            const { data: savedSale, error: saleError } = await supabase
+            const { data: savedSale, error: saleError } = await db
                 .from('sales')
                 .insert([saleData])
                 .select()
@@ -434,25 +467,21 @@ const POS = () => {
 
             const finalSaleId = savedSale?.id || saleId;
 
-            // 2. Save sale items (link to the real DB sale id)
+            // 2. Save sale items
             const saleItemsData = cart.map(item => ({
-                sale_id: savedSale?.id,
+                sale_id: finalSaleId,
                 product_id: item.id,
-                name: item.name,
                 qty: item.quantity,
                 price: item.custom_price !== undefined ? item.custom_price : (isWholesaleMode ? (item.wholesale_price || item.price) : item.price),
-                total: (item.custom_price !== undefined ? item.custom_price : (isWholesaleMode ? (item.wholesale_price || item.price) : item.price)) * item.quantity - (item.discount || 0),
                 buy_price: item.buy_price || 0,
                 reason: item.reason || null
             }));
 
-            if (savedSale?.id) {
-                const { error: itemsError } = await supabase
-                    .from('sale_items')
-                    .insert(saleItemsData);
-                if (itemsError) addToSyncQueue('sale_items', 'insert', saleItemsData);
-            } else {
-                // sale itself did not save to DB -> queue everything for later sync
+            const { error: itemsError } = await db
+                .from('sale_items')
+                .insert(saleItemsData);
+
+            if (itemsError) {
                 addToSyncQueue('sale_items', 'insert', saleItemsData);
             }
 
@@ -469,7 +498,7 @@ const POS = () => {
                         added_by: user?.name || activeShift?.staffName || 'Operator',
                         sale_id: finalSaleId
                     };
-                    const { error: expError } = await supabase.from('expenses').insert([expenseData]);
+                    const { error: expError } = await db.from('expenses').insert([expenseData]);
                     if (expError) addToSyncQueue('expenses', 'insert', expenseData);
                     toast.success(`Expense Logged!`);
                 }
@@ -483,7 +512,7 @@ const POS = () => {
                     const newTotalSold = (invItem.total_sold || 0) + cartItem.quantity;
 
                     // Fire-and-forget database update (errors handled via sync queue)
-                    supabase.from('inventory')
+                    db.from('inventory')
                         .update({ stock: newStock, total_sold: newTotalSold })
                         .eq('id', invItem.id)
                         .then(({ error }) => {
@@ -499,14 +528,14 @@ const POS = () => {
 
             // 5. Update Shift Stats
             dispatch(updateShiftStats({ sale: finalTotal }));
-            const { data: currentShift } = await supabase
+            const { data: currentShift } = await db
                 .from('shifts')
                 .select('sales')
                 .eq('id', activeShift.id)
                 .single();
 
             const newShiftSales = (currentShift?.sales || 0) + finalTotal;
-            const { error: shiftError } = await supabase
+            const { error: shiftError } = await db
                 .from('shifts')
                 .update({ sales: newShiftSales })
                 .eq('id', activeShift.id);
@@ -514,7 +543,7 @@ const POS = () => {
 
             // 6. Update Customer Balance if Credit
             if (paymentMethod === 'Credit' && selectedCustomer) {
-                const { data: custData } = await supabase
+                const { data: custData } = await db
                     .from('customers')
                     .select('balance, history')
                     .eq('id', selectedCustomer.id)
@@ -531,7 +560,7 @@ const POS = () => {
                     ...(custData?.history || [])
                 ];
 
-                const { error: custError } = await supabase
+                const { error: custError } = await db
                     .from('customers')
                     .update({ balance: newBalance, history: newHistory })
                     .eq('id', selectedCustomer.id);
@@ -621,6 +650,7 @@ const POS = () => {
                     {!isMobile && (
                         <div className="nav-scroll-container" style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', whiteSpace: 'nowrap', flex: 1, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                             {[
+                                { label: 'Calculator', icon: Calculator, action: 'calc', perm: 'pos' },
                                 { label: 'New Sale', icon: ShoppingCart, to: '/pos', perm: 'pos' },
                                 { label: 'Invoice', icon: History, to: '/invoice', perm: 'pos' },
                                 { label: 'Sale Return', icon: RefreshCw, to: '/returns', perm: 'pos' },
@@ -642,7 +672,7 @@ const POS = () => {
                                 return (
                                     <button
                                         key={i}
-                                        onClick={() => navigate(b.to)}
+                                        onClick={() => b.action === 'calc' ? dispatch(openCalculator()) : navigate(b.to)}
                                         title={b.label}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: '6px',
@@ -673,14 +703,7 @@ const POS = () => {
                                     <div style={{ height: '28px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}></div>
                                 </>
                             )}
-                            <button
-                                onClick={() => dispatch(openCalculator())}
-                                title="Calculator (F3)"
-                                style={{ background: '#FF8A1E', border: 'none', color: 'white', width: '34px', height: '34px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >
-                                <Hash size={16} />
-                            </button>
-                            {/* REPRINT LAST RECEIPT */}
+                            {/* FAST / FULLSCREEN MODE */}
                             <button
                                 onClick={handleReprintLast}
                                 disabled={!lastSale}
@@ -700,7 +723,6 @@ const POS = () => {
                         </div>
                     ) : (
                         <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-                            <button onClick={() => dispatch(openCalculator())} style={{ background: '#FF8A1E', border: 'none', color: 'white', padding: '8px', borderRadius: '6px' }}><Hash size={18} /></button>
                             <button onClick={() => setShowParkedList(true)} style={{ background: '#334155', border: 'none', color: 'white', padding: '8px', borderRadius: '6px' }}><Pause size={18} /></button>
                         </div>
                     )}
@@ -808,8 +830,8 @@ const POS = () => {
                                                             notes: 'Added from POS'
                                                         };
                                                         dispatch(addToShortage(shortageItem));
-                                                        supabase.from('shortage').insert([shortageItem]).then(({ error }) => {
-                                                            if (!error) toast.success('Marked in Shortage Book (Supabase)');
+                                                        db.from('shortage').insert([shortageItem]).then(({ error }) => {
+                                                            if (!error) toast.success('Marked in Shortage Book (Database)');
                                                         });
                                                         toast.success('Marked in Shortage Book');
                                                     }}
@@ -831,8 +853,8 @@ const POS = () => {
                                                             notes: 'Added from POS'
                                                         };
                                                         dispatch(addToShortage(newShortage));
-                                                        supabase.from('shortage').insert([newShortage]).then(({ error }) => {
-                                                            if (!error) toast.success(`"${searchTerm}" added to Shortage Book (Supabase)`);
+                                                        db.from('shortage').insert([newShortage]).then(({ error }) => {
+                                                            if (!error) toast.success(`"${searchTerm}" added to Shortage Book (Database)`);
                                                         });
                                                         toast.success(`"${searchTerm}" added to Shortage Book`);
                                                         setSearchTerm('');
