@@ -250,11 +250,9 @@ class Channel {
     return this;
   }
   subscribe(cb) {
-    // Poll every 4s and trigger all handlers so the app re-fetches, mimicking
-    // Database realtime. Cheap for a single local machine.
-    this._timer = setInterval(() => {
-      this._handlers.forEach((h) => { try { h({}); } catch {} });
-    }, 4000);
+    // Local offline app: no background polling. Data changes are made by this
+    // same app and reflected immediately, so a 4s full-refetch loop only wastes
+    // CPU/RAM (re-loading thousands of products + sales). Disabled for speed.
     if (cb) cb('SUBSCRIBED');
     return this;
   }

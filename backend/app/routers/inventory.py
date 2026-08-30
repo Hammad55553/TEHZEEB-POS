@@ -8,7 +8,12 @@ router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 @router.get("/products")
 def get_products():
     with get_cursor() as cur:
-        cur.execute("SELECT * FROM inventory ORDER BY name ASC")
+        # Light columns only (skip heavy data/restock_history) for fast startup
+        cur.execute("""SELECT id,name,category,barcode,batch_no,price,wholesale_price,
+            buy_price,cost_price,sale_price,stock,min_stock,low_stock,total_sold,
+            sell_type,unit,manufacturer,image,expiry,expiry_date,supplier,
+            tax_percent,critical_days,parent_id,pack_qty,deleted_at,created_at,updated_at
+            FROM inventory WHERE deleted_at IS NULL ORDER BY name ASC""")
         return {"data": [dict(r) for r in cur.fetchall()], "error": None}
 
 @router.post("/products")
