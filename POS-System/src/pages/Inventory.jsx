@@ -5,6 +5,7 @@ import { Plus, Search, Edit3, Trash2, Filter, Download, Box, AlertCircle, Calend
 import { db } from '../database';
 import { addItem, editItem, deleteItem } from '../store/slices/inventorySlice';
 import Barcode from 'react-barcode';
+import Pagination from '../components/Pagination';
 import toast from 'react-hot-toast';
 import { addToSyncQueue } from '../utils/offlineSync';
 import doneSound from '../assets/Done.ogg';
@@ -993,22 +994,13 @@ const Inventory = () => {
                 </div>
 
                 {/* PAGINATION BAR */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 20px', borderTop: '1px solid #f1f5f9', background: '#fff', flexWrap: 'wrap' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b' }}>
-                        {filteredItems.length === 0 ? 'No products' : `Showing ${(safePage - 1) * PAGE_SIZE + 1}-${Math.min(safePage * PAGE_SIZE, filteredItems.length)} of ${filteredItems.length}`}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <button onClick={() => setCurrentPage(1)} disabled={safePage <= 1}
-                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: safePage <= 1 ? '#f8fafc' : '#fff', color: '#475569', fontWeight: 800, cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1 }}>« First</button>
-                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage <= 1}
-                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: safePage <= 1 ? '#f8fafc' : '#fff', color: '#475569', fontWeight: 800, cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1 }}>‹ Prev</button>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#8B2500', padding: '0 6px' }}>Page {safePage} / {totalPages}</span>
-                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages}
-                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: safePage >= totalPages ? '#f8fafc' : '#fff', color: '#475569', fontWeight: 800, cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1 }}>Next ›</button>
-                        <button onClick={() => setCurrentPage(totalPages)} disabled={safePage >= totalPages}
-                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: safePage >= totalPages ? '#f8fafc' : '#fff', color: '#475569', fontWeight: 800, cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1 }}>Last »</button>
-                    </div>
-                </div>
+                <Pagination
+                    page={safePage}
+                    totalPages={totalPages}
+                    totalItems={filteredItems.length}
+                    pageSize={PAGE_SIZE}
+                    onChange={setCurrentPage}
+                />
             </div>
 
             {/* AUDIT MODAL */}
