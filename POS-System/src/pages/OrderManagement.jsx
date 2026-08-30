@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import logo from '../assets/tehzeeb_logo.png';
 import { useSelector, useDispatch } from 'react-redux';
+import Pagination from '../components/Pagination';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Truck,
@@ -48,6 +49,8 @@ const OrderManagement = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('All');
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 100;
     const [confirmDelete, setConfirmDelete] = useState({ show: false, type: '', id: null, index: null, title: '', message: '' });
     const [processingOrderId, setProcessingOrderId] = useState(null);
 
@@ -334,12 +337,24 @@ const OrderManagement = () => {
         window.print();
     };
 
-    const filteredOrders = orders.filter(o =>
-        (o.supplier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            o.id?.toLowerCase().includes(searchTerm.toLowerCase().replace('#', '').replace('ord-', '')) ||
-            o.items?.some(i => i.name?.toLowerCase().includes(searchTerm.toLowerCase()))) &&
-        (activeTab === 'All' || o.status === activeTab)
+    const filteredOrders = useMemo(() => {
+        const q = searchTerm.toLowerCase();
+        const qid = q.replace('#', '').replace('ord-', '');
+        return orders.filter(o =>
+            (o.supplier?.toLowerCase().includes(q) ||
+                String(o.id ?? '').toLowerCase().includes(qid) ||
+                o.items?.some(i => i.name?.toLowerCase().includes(q))) &&
+            (activeTab === 'All' || o.status === activeTab)
+        );
+    }, [orders, searchTerm, activeTab]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pagedOrders = useMemo(
+        () => filteredOrders.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+        [filteredOrders, safePage]
     );
+    React.useEffect(() => { setPage(1); }, [searchTerm, activeTab]);
 
     return (
         <div style={{
@@ -473,14 +488,10 @@ const OrderManagement = () => {
                 gridTemplateColumns: window.innerWidth <= 640 ? '1fr' : 'repeat(auto-fill, minmax(380px, 1fr))',
                 gap: '20px'
             }}>
-                <AnimatePresence mode="popLayout">
-                    {filteredOrders.map((order, idx) => (
-                        <motion.div
+                <>
+                    {pagedOrders.map((order, idx) => (
+                        <div
                             key={order.id}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ delay: idx * 0.03 }}
                             style={{
                                 background: 'white',
                                 borderRadius: '24px',
@@ -608,9 +619,17 @@ const OrderManagement = () => {
                                     </button>
                                 </div>
                             )}
-                        </motion.div>
+                        </div>
                     ))}
-                </AnimatePresence>
+                </>
+
+                <Pagination
+                    page={safePage}
+                    totalPages={totalPages}
+                    totalItems={filteredOrders.length}
+                    pageSize={PAGE_SIZE}
+                    onChange={setPage}
+                />
             </div>
 
             {/* 4. BOOKING MODAL */}
