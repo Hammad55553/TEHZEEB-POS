@@ -169,10 +169,10 @@ const POS = () => {
         const s = item.stock ?? 0;
         return s <= (item.low_stock || 5);
     };
-    const lowStockCount = inventory.filter(isLowStock).length;
+    const lowStockCount = useMemo(() => inventory.filter(isLowStock).length, [inventory]);
 
     // TODAY'S SALES SUMMARY (defensive: guards for undefined fields/shapes)
-    const todayStats = (() => {
+    const todayStats = useMemo(() => {
         const now = new Date();
         const isToday = (d) => {
             if (!d) return false;
@@ -185,7 +185,7 @@ const POS = () => {
         const todays = (salesHistory || []).filter(s => isToday(s?.created_at || s?.date));
         const total = todays.reduce((acc, s) => acc + (Number(s?.total) || 0), 0);
         return { total, count: todays.length };
-    })();
+    }, [salesHistory]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -207,7 +207,7 @@ const POS = () => {
     const searchInputRef = useRef(null);
     const cashInputRef = useRef(null);
 
-    const categories = ['All', ...new Set(inventory.map(i => i.category))];
+    const categories = useMemo(() => ['All', ...new Set(inventory.map(i => i.category))], [inventory]);
 
     // KEYBOARD SHORTCUTS
     useEffect(() => {
