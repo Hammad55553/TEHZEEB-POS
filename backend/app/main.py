@@ -198,6 +198,8 @@ class SelectIn(BaseModel):
     embed: list[str] = []
     order: Optional[dict] = None
     limit: Optional[int] = None
+    offset: Optional[int] = None
+    count: bool = False
     single: bool = False
 
 

@@ -85,10 +85,21 @@ def select(table: str, body: dict) -> list[dict]:
     embed = body.get("embed", [])       # list of embed names e.g. ['sale_items']
     order = body.get("order")           # {'col':..,'asc':bool}
     limit = body.get("limit")
+    offset = body.get("offset")         # for pagination: skip N rows
     single = body.get("single", False)
+    want_count = body.get("count", False)  # also return total row count
 
     params: list = []
     where = _build_where(filters, params)
+
+    # optional total count (for pagination "how many pages")
+    total = None
+    if want_count:
+        with get_cursor() as cur:
+            cur.execute(f"SELECT COUNT(*) AS c FROM {table}{where}", list(params))
+            row = cur.fetchone()
+            total = int(row["c"]) if row else 0
+
     sql = f"SELECT * FROM {table}{where}"
     if order and order.get("col"):
         oc = order["col"]
@@ -96,6 +107,8 @@ def select(table: str, body: dict) -> list[dict]:
             sql += f" ORDER BY {oc} {'ASC' if order.get('asc', True) else 'DESC'}"
     if limit:
         sql += " LIMIT %s"; params.append(int(limit))
+    if offset:
+        sql += " OFFSET %s"; params.append(int(offset))
 
     with get_cursor() as cur:
         cur.execute(sql, params)
@@ -119,6 +132,8 @@ def select(table: str, body: dict) -> list[dict]:
 
     if single:
         return rows[0] if rows else None
+    if want_count:
+        return {"rows": rows, "total": total}
     return rows
 
 

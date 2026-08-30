@@ -6,9 +6,9 @@ from psycopg2.extras import Json
 router = APIRouter(prefix="/api/shifts", tags=["shifts"])
 
 @router.get("/")
-def get_shifts():
+def get_shifts(limit: int = 500):
     with get_cursor() as cur:
-        cur.execute("SELECT * FROM shifts ORDER BY opened_at DESC")
+        cur.execute("SELECT * FROM shifts ORDER BY opened_at DESC LIMIT %s", [limit])
         return {"data": [dict(r) for r in cur.fetchall()], "error": None}
 
 @router.post("/")

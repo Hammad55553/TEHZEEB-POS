@@ -6,9 +6,9 @@ from psycopg2.extras import Json
 router = APIRouter(prefix="/api/expenses", tags=["expenses"])
 
 @router.get("/")
-def get_expenses():
+def get_expenses(limit: int = 500):
     with get_cursor() as cur:
-        cur.execute("SELECT * FROM expenses WHERE deleted_at IS NULL ORDER BY created_at DESC")
+        cur.execute("SELECT * FROM expenses WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT %s", [limit])
         return {"data": [dict(r) for r in cur.fetchall()], "error": None}
 
 @router.post("/")

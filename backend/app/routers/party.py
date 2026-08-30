@@ -63,9 +63,9 @@ def update_supplier(supplier_id: int, supplier: dict):
 
 # --- Tasks ---
 @router.get("/tasks")
-def get_tasks():
+def get_tasks(limit: int = 500):
     with get_cursor() as cur:
-        cur.execute("SELECT * FROM tasks WHERE deleted_at IS NULL ORDER BY due_date ASC")
+        cur.execute("SELECT * FROM tasks WHERE deleted_at IS NULL ORDER BY due_date ASC LIMIT %s", [limit])
         return {"data": [dict(r) for r in cur.fetchall()], "error": None}
 
 @router.post("/tasks")
@@ -90,9 +90,9 @@ def update_task(task_id: int, task: dict):
 
 # --- Promises ---
 @router.get("/promises")
-def get_promises():
+def get_promises(limit: int = 500):
     with get_cursor() as cur:
-        cur.execute("SELECT * FROM promises WHERE deleted_at IS NULL ORDER BY promise_date ASC")
+        cur.execute("SELECT * FROM promises WHERE deleted_at IS NULL ORDER BY promise_date ASC LIMIT %s", [limit])
         return {"data": [dict(r) for r in cur.fetchall()], "error": None}
 
 @router.post("/promises")
@@ -117,9 +117,9 @@ def update_promise(promise_id: int, promise: dict):
 
 # --- Salaries ---
 @router.get("/salaries")
-def get_salaries():
+def get_salaries(limit: int = 500):
     with get_cursor() as cur:
-        cur.execute("SELECT * FROM salaries WHERE deleted_at IS NULL ORDER BY month DESC")
+        cur.execute("SELECT * FROM salaries WHERE deleted_at IS NULL ORDER BY month DESC LIMIT %s", [limit])
         return {"data": [dict(r) for r in cur.fetchall()], "error": None}
 
 @router.post("/salaries")

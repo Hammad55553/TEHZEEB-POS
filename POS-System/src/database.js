@@ -77,6 +77,8 @@ class QueryBuilder {
     this._embed = [];
     this._order = null;
     this._limit = null;
+    this._offset = null;
+    this._count = false;
     this._single = false;
     this._action = 'select';
     this._payload = null;
@@ -142,6 +144,16 @@ class QueryBuilder {
     return this;
   }
   limit(n) { this._limit = n; return this; }
+  // Database-style pagination: .range(from, to) inclusive (0-based)
+  range(from, to) {
+    const f = Number(from) || 0;
+    const t = Number(to);
+    this._offset = f;
+    this._limit = (Number.isFinite(t) ? (t - f + 1) : this._limit);
+    return this;
+  }
+  offset(n) { this._offset = Number(n) || 0; return this; }
+  withCount() { this._count = true; return this; }
   single() { this._single = true; return this; }
   maybeSingle() { this._single = true; return this; }
 
@@ -159,6 +171,8 @@ class QueryBuilder {
           embed: this._embed,
           order: this._order,
           limit: this._limit,
+          offset: this._offset,
+          count: this._count,
           single: this._single,
         });
       } else if (this._action === 'insert') {
