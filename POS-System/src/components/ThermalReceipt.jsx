@@ -124,6 +124,9 @@ const ThermalReceipt = ({ lastSale, activeShift, logo }) => {
                 <p style={{ margin: '0 0 2px 0', fontWeight: 'bold', fontSize: '10px' }}>THANK YOU FOR VISITING </p>
                 <p style={{ margin: '8px 0 0 0', fontWeight: 600 }}>No return/exchange without original bill.</p>
                 <p style={{ margin: 0 }}>Thank you for shopping with us!</p>
+                <div style={{ marginTop: '10px', fontSize: '8px', color: '#555' }}>
+                    Software developed by <b>asperinfotech.com</b>
+                </div>
             </div>
         </div>
     );
