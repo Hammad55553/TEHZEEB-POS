@@ -871,7 +871,9 @@ const Inventory = () => {
                                 {pagedItems.map(item => (
                                     <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                         <td style={{ padding: '15px 20px' }}>
-                                            {item.barcode ? <Barcode value={item.barcode} height={30} width={1.2} fontSize={10} background="transparent" /> : <span style={{ fontSize: '0.6rem', color: '#cbd5e1' }}>NO BARCODE</span>}
+                                            {item.barcode
+                                                ? <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: 800, color: '#334155', letterSpacing: '0.05em' }}>{item.barcode}</span>
+                                                : <span style={{ fontSize: '0.6rem', color: '#cbd5e1' }}>NO BARCODE</span>}
                                         </td>
                                         <td style={{ padding: '15px 20px' }}>
                                             <div style={{ fontWeight: 800, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
