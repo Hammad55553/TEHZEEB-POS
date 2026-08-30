@@ -101,47 +101,64 @@ function AppContent() {
       if (message) localStorage.setItem('tehzeeb_lock_message', message);
     };
 
+    // Offline grace: once a license has verified OK online, allow this many days
+    // of offline use before locking (so a temporary internet outage never stops
+    // a paying shop). Data is NEVER deleted — only the app locks.
+    const OFFLINE_GRACE_DAYS = 7;
+    const markVerified = () => { try { localStorage.setItem('tehzeeb_lic_last_ok', String(Date.now())); } catch(e){} };
+    const withinGrace = () => {
+      const t = parseInt(localStorage.getItem('tehzeeb_lic_last_ok') || '0', 10);
+      if (!t) return false;
+      return (Date.now() - t) < OFFLINE_GRACE_DAYS * 24 * 60 * 60 * 1000;
+    };
+
     const checkLicense = async () => {
-      // 1) Per-shop license (only if this install has a key)
-      if (licenseKey) {
-        try {
-          const res = await fetch(`${LICENSES_URL}?t=${Date.now()}`, { cache: 'no-store' });
-          if (res.ok) {
-            const all = await res.json();
-            const lic = all && all[licenseKey];
-            if (lic) {
-              // expired?
-              if (lic.expiry) {
-                const exp = new Date(lic.expiry + 'T23:59:59');
-                if (!isNaN(exp) && exp < new Date()) {
-                  applyLock(true, lic.message || 'License expired. Please renew.');
-                  localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
-                  return;
-                }
-              }
-              if (lic.locked === true) {
-                applyLock(true, lic.message || 'Account locked. Please contact provider.');
-              } else {
-                applyLock(false, '');
-              }
-              localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
-              return; // per-license decision is final
-            }
-            // key not found in list -> treat as not-yet-activated but do not hard lock
-          }
-        } catch (e) { /* offline: keep last known status */ }
+      // STRICT: every install must carry a valid license key. No key = locked.
+      if (!licenseKey) {
+        applyLock(true, 'License key missing. Please contact your provider to activate this software.');
+        return;
       }
 
-      // 2) Global kill switch fallback (locks everyone) — also lets you disable
-      //    installs that have no license key yet.
       try {
-        const res = await fetch(`${KILL_SWITCH_URL}?t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`${LICENSES_URL}?t=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
-          const data = await res.json();
-          if (data && data.locked === true) applyLock(true, data.message);
-          else if (data && data.locked === false) applyLock(false, '');
+          const all = await res.json();
+          const lic = all && all[licenseKey];
+
+          if (!lic) {
+            // key not present in the central list -> invalid / removed
+            applyLock(true, 'Invalid license. Please contact your provider.');
+            return;
+          }
+          // expired?
+          if (lic.expiry) {
+            const exp = new Date(lic.expiry + 'T23:59:59');
+            if (!isNaN(exp) && exp < new Date()) {
+              applyLock(true, lic.message || 'License expired. Please renew.');
+              localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
+              return;
+            }
+          }
+          if (lic.locked === true) {
+            applyLock(true, lic.message || 'Account locked. Please contact your provider.');
+            localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
+            return;
+          }
+          // all good online
+          applyLock(false, '');
+          localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
+          markVerified();
+          return;
         }
-      } catch (e) { /* offline: keep last known status */ }
+        // server returned non-OK -> treat like offline (grace)
+      } catch (e) { /* offline */ }
+
+      // OFFLINE: only allow if we verified OK recently; otherwise lock.
+      if (withinGrace()) {
+        applyLock(false, '');
+      } else {
+        applyLock(true, 'Cannot verify license (offline too long). Connect to the internet once to continue.');
+      }
     };
 
     checkLicense();

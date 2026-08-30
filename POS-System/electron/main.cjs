@@ -44,12 +44,17 @@ function createWindow() {
   let licenseKey = '';
   try {
     const fs = require('fs');
+    // Search several easy locations so YOU can drop the key file wherever is
+    // convenient on the client machine. First match wins.
     const licPaths = [
-      path.join(process.resourcesPath || __dirname, 'license.key'),
-      path.join(__dirname, '..', 'license.key'),
+      path.join(process.resourcesPath || __dirname, 'license.key'), // inside app resources
+      path.join(__dirname, '..', 'license.key'),                    // beside the app
+      path.join(app.getPath('userData'), 'license.key'),            // app data folder
+      'C:\\tehzeeb-license.key',                                   // simple: root of C: drive (Windows)
+      path.join(app.getPath('home'), 'tehzeeb-license.key'),        // user home folder
     ];
     for (const p of licPaths) {
-      if (fs.existsSync(p)) { licenseKey = String(fs.readFileSync(p, 'utf8')).trim(); break; }
+      try { if (fs.existsSync(p)) { licenseKey = String(fs.readFileSync(p, 'utf8')).trim(); break; } } catch (e) {}
     }
   } catch (e) { /* no license file -> key stays empty */ }
 
