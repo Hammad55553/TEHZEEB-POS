@@ -239,3 +239,72 @@ def db_update(table: str, body: UpdateIn):
 @app.post("/db/{table}/delete")
 def db_delete(table: str, body: DeleteIn):
     return _wrap(lambda: query.delete(table, body.filters))
+
+
+# ============================================================
+# BACKUP / RESTORE  (full data as one JSON file)
+# ============================================================
+_BACKUP_TABLES = [
+    "users", "inventory", "customers", "suppliers",
+    "sales", "sale_items", "orders", "expenses",
+    "shifts", "shortage", "tasks", "promises", "salaries", "stock_moves",
+]
+
+def _get_cursor(commit=False):
+    return __import__("app.db", fromlist=["get_cursor"]).get_cursor(commit=commit)
+
+@app.get("/backup")
+def backup_data():
+    """Return the whole database as one JSON object (all tables)."""
+    import datetime, json as _json
+    out = {"_meta": {"app": config.APP_NAME, "created_at": datetime.datetime.now().isoformat(), "version": 1}, "tables": {}}
+    with _get_cursor() as cur:
+        for t in _BACKUP_TABLES:
+            try:
+                cur.execute(f"SELECT * FROM {t}")
+                rows = [dict(r) for r in cur.fetchall()]
+                # make datetimes/decimals JSON-safe
+                out["tables"][t] = _json.loads(_json.dumps(rows, default=str))
+            except Exception as e:
+                out["tables"][t] = []
+    return out
+
+class RestoreIn(BaseModel):
+    tables: dict
+    mode: Optional[str] = "replace"   # replace | merge
+
+@app.post("/restore")
+def restore_data(body: RestoreIn):
+    """Restore data from a backup JSON. mode=replace wipes existing rows first."""
+    tables = body.tables or {}
+    counts = {}
+    # insert parents before children (FK safety)
+    order = [t for t in _BACKUP_TABLES if t in tables]
+    with _get_cursor(commit=True) as cur:
+        if (body.mode or "replace") == "replace":
+            # wipe children first, then parents (reverse), CASCADE handles refs
+            for t in reversed(_BACKUP_TABLES):
+                if t in tables:
+                    try: cur.execute(f"TRUNCATE {t} RESTART IDENTITY CASCADE")
+                    except Exception: pass
+        for t in order:
+            rows = tables.get(t) or []
+            n = 0
+            for row in rows:
+                if not row: continue
+                cols = list(row.keys())
+                collist = ",".join(cols)
+                ph = ",".join(["%s"] * len(cols))
+                vals = [ (__import__("json").dumps(v) if isinstance(v,(dict,list)) else v) for v in row.values() ]
+                try:
+                    cur.execute(f"INSERT INTO {t} ({collist}) VALUES ({ph})", vals)
+                    n += 1
+                except Exception:
+                    pass
+            counts[t] = n
+            # fix id sequence
+            try:
+                cur.execute(f"SELECT setval(pg_get_serial_sequence('{t}','id'), COALESCE((SELECT MAX(id) FROM {t}),1))")
+            except Exception:
+                pass
+    return {"data": {"restored": counts, "mode": body.mode}, "error": None}

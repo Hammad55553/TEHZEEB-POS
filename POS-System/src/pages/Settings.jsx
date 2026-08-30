@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import UpdateChecker from '../components/UpdateChecker';
 import { db } from '../database';
-import { Settings as SettingsIcon, Lock, ShieldCheck, Key, AlertCircle, Loader2, FileText, Database, History, Globe, RefreshCw, Download, Cloud, User, Monitor, Server, Activity, ShoppingCart } from 'lucide-react';
+import { Settings as SettingsIcon, Lock, ShieldCheck, Key, AlertCircle, Loader2, FileText, Database, History, Globe, RefreshCw, Download, Cloud, User, Monitor, Server, Activity, ShoppingCart, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
@@ -15,6 +15,60 @@ const Settings = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [serverIp, setServerIp] = useState("127.0.0.1");
     const [backupTime, setBackupTime] = useState(localStorage.getItem('tehzeeb_backup_time') || '20:00');
+    const [isBackingUp, setIsBackingUp] = useState(false);
+    const [isRestoring, setIsRestoring] = useState(false);
+
+    const apiBase = () => {
+        const local = localStorage.getItem('tehzeeb_server_ip');
+        return (local || (window.__POS_API_BASE__ || `http://${window.location.hostname || '127.0.0.1'}:8000`)).replace(/\/$/, '');
+    };
+
+    // Download full data as one .json backup file
+    const handleBackup = async () => {
+        try {
+            setIsBackingUp(true);
+            const res = await fetch(`${apiBase()}/backup`);
+            if (!res.ok) throw new Error('backup failed');
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const d = new Date().toISOString().split('T')[0];
+            a.href = url;
+            a.download = `tehzeeb-backup-${d}.json`;
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+            toast.success('Backup downloaded successfully!');
+        } catch (e) {
+            toast.error('Backup failed. Is the server running?');
+        } finally { setIsBackingUp(false); }
+    };
+
+    // Restore from a .json backup file (replaces existing data)
+    const handleRestoreFile = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        if (!window.confirm('Yeh maujuda saara data hata kar backup wala data daal dega. Aage barhein?')) return;
+        try {
+            setIsRestoring(true);
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            const tables = parsed.tables || parsed;
+            const res = await fetch(`${apiBase()}/restore`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tables, mode: 'replace' }),
+            });
+            const out = await res.json();
+            if (out.error) throw new Error(out.error.message || 'restore failed');
+            toast.success('Data restored! App ab refresh hoga.');
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (err) {
+            toast.error('Restore failed: ' + (err.message || 'invalid file'));
+        } finally { setIsRestoring(false); }
+    };
+
 
     React.useEffect(() => {
         const fetchIp = async () => {
@@ -265,10 +319,18 @@ const Settings = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <div style={{ background: '#f8fafc', padding: '25px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                     <h4 style={{ fontSize: '1rem', fontWeight: 900, color: '#0f172a' }}>Manual Local Backup</h4>
-                                    <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.5' }}>Download a complete SQL dump of your database immediately to your local computer.</p>
-                                    <button onClick={() => toast.success("Backup downloaded successfully!")} style={{ padding: '12px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                        <Download size={16} /> DOWNLOAD BACKUP NOW
+                                    <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.5' }}>Download a complete backup (.json) of your entire database — products, sales, customers, khata, everything.</p>
+                                    <button disabled={isBackingUp} onClick={handleBackup} style={{ padding: '12px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: isBackingUp ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: isBackingUp ? 0.7 : 1 }}>
+                                        {isBackingUp ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} {isBackingUp ? 'BACKING UP...' : 'DOWNLOAD BACKUP NOW'}
                                     </button>
+
+                                    <div style={{ borderTop: '1px dashed #cbd5e1', margin: '4px 0' }}></div>
+                                    <h4 style={{ fontSize: '1rem', fontWeight: 900, color: '#b91c1c' }}>Restore From Backup</h4>
+                                    <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.5' }}>Upload a backup (.json) to load its data here. This <b>replaces</b> all current data on this computer.</p>
+                                    <label style={{ padding: '12px', background: '#b91c1c', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: isRestoring ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: isRestoring ? 0.7 : 1 }}>
+                                        {isRestoring ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} {isRestoring ? 'RESTORING...' : 'RESTORE FROM FILE'}
+                                        <input type="file" accept=".json,application/json" onChange={handleRestoreFile} disabled={isRestoring} style={{ display: 'none' }} />
+                                    </label>
                                 </div>
                                 <div style={{ background: '#f0fdf4', padding: '25px', borderRadius: '16px', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                     <h4 style={{ fontSize: '1rem', fontWeight: 900, color: '#166534' }}>Automated Daily Backup</h4>
@@ -661,7 +723,7 @@ const NetworkDashboard = ({ serverIp }) => {
 
                         {clients.length === 0 && (
                             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#64748b', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.9)', padding: '10px 20px', borderRadius: '20px' }}>
-                                <Loader2 size={16} className="spin" /> Waiting for staff connections...
+                                <Loader2 size={16} className="animate-spin" /> Waiting for staff connections...
                             </div>
                         )}
 
