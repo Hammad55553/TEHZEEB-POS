@@ -215,7 +215,14 @@ const POS = () => {
             if (e.key === 'F1') { e.preventDefault(); searchInputRef.current?.focus(); }
             if (e.key === 'F2') { e.preventDefault(); setShowCustomerSearch(true); }
             if (e.key === 'F3') { e.preventDefault(); dispatch(openCalculator()); }
-            if (e.key === 'F10') { e.preventDefault(); { setPendingPrint(true); setShowConfirm(true); } }
+            if (e.key === 'F10') { 
+                e.preventDefault(); 
+                if (checkoutStage === 'printed') {
+                    resetPOS();
+                } else {
+                    setPendingPrint(true); setShowConfirm(true); 
+                }
+            }
             if (e.key === 'F9') { e.preventDefault(); { setPendingPrint(false); setShowConfirm(true); } }
             if (e.key === 'F4') { e.preventDefault(); handleParkBill(); }
             if (e.key === 'Escape') {
@@ -226,7 +233,7 @@ const POS = () => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart, selectedCustomer, cashReceived, globalDiscount, paymentMethod]);
+    }, [cart, selectedCustomer, cashReceived, globalDiscount, paymentMethod, checkoutStage]);
 
     // GLOBAL BARCODE SCANNER INTERCEPTOR
     useEffect(() => {
@@ -603,9 +610,10 @@ const POS = () => {
                 setCheckoutStage('printing');
                 playDone();
                 toast.success('Sale Processed Locally (Offline Ready)');
-                setTimeout(() => {
+                if (window.printTimer) clearTimeout(window.printTimer);
+                window.printTimer = setTimeout(() => {
                     window.print();
-                }, 300);
+                }, 400);
             } else {
                 setCheckoutStage('printed');
                 playDone();
