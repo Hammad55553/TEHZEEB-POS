@@ -33,21 +33,20 @@ export default class ErrorBoundary extends React.Component {
         }}>
           <div style={{ fontSize: 48 }}>⚠️</div>
           <h2 style={{ color: '#b91c1c', fontWeight: 900, margin: 0 }}>
-            Is screen mein masla aa gaya
+            Something went wrong
           </h2>
           <p style={{ color: '#64748b', maxWidth: 420, fontWeight: 600 }}>
-            Software band nahi hua — bas yeh screen ruk gayi. Neeche button dabayein
-            ya doosri screen pe jayein.
+            An unexpected error occurred on this screen. The application is still running. You can click the button below to retry or navigate to another screen.
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
             <button onClick={this.handleReset} style={{
               padding: '12px 22px', background: '#0f172a', color: '#fff',
               border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer',
-            }}>Dobara koshish karein</button>
+            }}>Try Again</button>
             <button onClick={() => window.location.reload()} style={{
               padding: '12px 22px', background: '#166534', color: '#fff',
               border: 'none', borderRadius: 8, fontWeight: 800, cursor: 'pointer',
-            }}>Software refresh karein</button>
+            }}>Refresh Page</button>
           </div>
           {this.state.error && (
             <pre style={{

@@ -282,7 +282,7 @@ const POS = () => {
     useEffect(() => {
         if (searchTerm && searchTerm.length >= 2) {
             const match = inventory.find(i =>
-                i.name.toLowerCase().startsWith(searchTerm.toLowerCase())
+                i.name?.toLowerCase().startsWith(searchTerm.toLowerCase())
             );
             if (match) {
                 setSuggestion(match.name);
@@ -302,7 +302,7 @@ const POS = () => {
         if (!q && selectedCategory === 'All') return [];
         return inventory.filter(item => {
             const matchesSearch = !q ||
-                item.name.toLowerCase().includes(q) ||
+                item.name?.toLowerCase().includes(q) ||
                 String(item.id).toLowerCase().includes(q) ||
                 (item.barcode && item.barcode.includes(searchTerm)) ||
                 (item.manufacturer && item.manufacturer.toLowerCase().includes(q)) ||

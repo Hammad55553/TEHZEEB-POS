@@ -62,7 +62,7 @@ const Inventory = () => {
 
     const filteredItems = inventory.filter(item => {
         const matchesSearch =
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (item.id && item.id.includes(searchTerm)) ||
             (item.barcode && item.barcode.includes(searchTerm)) ||
             (item.manufacturer && item.manufacturer.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -75,7 +75,7 @@ const Inventory = () => {
     // GHOST AUTOCOMPLETE FOR ENROLLMENT
     React.useEffect(() => {
         if (isModalOpen && formData.name && formData.name.length >= 2) {
-            const match = inventory.find(i => i.name.toLowerCase().startsWith(formData.name.toLowerCase()));
+            const match = inventory.find(i => i.name?.toLowerCase().startsWith(formData.name.toLowerCase()));
             if (match) setNameSuggestion(match.name);
             else setNameSuggestion('');
         } else {
