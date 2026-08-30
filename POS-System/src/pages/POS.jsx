@@ -271,7 +271,8 @@ const POS = () => {
             setSearchTerm('');
             setSuggestion('');
             playDone();
-            toast.success(`${item.name} added`);
+            // short + fixed id so rapid scans replace the toast instead of stacking many
+            toast.success(`${item.name} added`, { id: 'scan-add', duration: 800 });
         } else {
             playError();
             toast.error('Item not found / wrong code');
@@ -314,19 +315,20 @@ const POS = () => {
 
     const addToCart = (product) => {
         const inventoryItem = inventory.find(i => i.id === product.id);
-        const existing = cart.find(c => c.id === product.id);
-        const currentQtyInCart = existing ? existing.quantity : 0;
-
-        if (inventoryItem && inventoryItem.stock <= currentQtyInCart) {
-            toast.success(`Demand entry: Sourcing from outside needed.`);
-        }
-
-        if (existing) {
-            setCart(cart.map(c => c.id === product.id ? { ...c, quantity: c.quantity + 1 } : c));
-        } else {
+        // FAST SCAN SAFE: use a functional update so rapid scans (2-3 per second)
+        // never work off a stale cart — every scan is guaranteed to be added.
+        setCart(prev => {
+            const existing = prev.find(c => c.id === product.id);
+            const currentQtyInCart = existing ? existing.quantity : 0;
+            if (inventoryItem && inventoryItem.stock <= currentQtyInCart) {
+                toast.success(`Demand entry: Sourcing from outside needed.`);
+            }
+            if (existing) {
+                return prev.map(c => c.id === product.id ? { ...c, quantity: c.quantity + 1 } : c);
+            }
             const initialPrice = isWholesaleMode ? (product.wholesale_price || product.price) : product.price;
-            setCart([{ ...product, quantity: 1, discount: 0, reason: '', custom_price: initialPrice }, ...cart]);
-        }
+            return [{ ...product, quantity: 1, discount: 0, reason: '', custom_price: initialPrice }, ...prev];
+        });
         setSearchTerm('');
         searchInputRef.current?.focus();
     };
