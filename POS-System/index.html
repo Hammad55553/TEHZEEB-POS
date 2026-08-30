@@ -7,13 +7,8 @@
     <meta name="theme-color" content="#F7941D" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tehzeeb Sweets & Super Store</title>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js');
-        });
-      }
-    </script>
+    <!-- ServiceWorker disabled: this runs as an Electron desktop app (file://),
+         where /sw.js cannot register and only produced console errors. -->
   </head>
   <body>
     <div id="root"></div>

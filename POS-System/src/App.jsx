@@ -171,25 +171,31 @@ function AppContent() {
     const handleResize = () => setIsMobile(window.innerWidth <= 1024);
     window.addEventListener('resize', handleResize);
     
-    // Heartbeat ping for network tracking
-    const heartbeat = setInterval(async () => {
-      try {
-        const localApiBase = localStorage.getItem('tehzeeb_server_ip');
-        const role = localStorage.getItem('tehzeeb_network_role') || 'client';
-        const url = (localApiBase || (window.__POS_API_BASE__ || `http://${window.location.hostname || '127.0.0.1'}:8000`)).replace(/\/$/, '');
-        await fetch(`${url}/network/heartbeat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role, user: user?.name || user?.email || 'Unknown' })
-        });
-      } catch (e) {
-        // Silent fail if backend unreachable
-      }
-    }, 5000);
+    // Heartbeat ping for network tracking — ONLY when a multi-computer network
+    // role is actually configured. On a single-computer setup this did nothing
+    // useful and just spammed the console with ERR_NETWORK_CHANGED on wifi/LAN
+    // changes. Also slowed to every 15s to be gentle.
+    const networkRole = localStorage.getItem('tehzeeb_network_role');
+    let heartbeat = null;
+    if (networkRole) {
+      heartbeat = setInterval(async () => {
+        try {
+          const localApiBase = localStorage.getItem('tehzeeb_server_ip');
+          const url = (localApiBase || (window.__POS_API_BASE__ || `http://${window.location.hostname || '127.0.0.1'}:8000`)).replace(/\/$/, '');
+          await fetch(`${url}/network/heartbeat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: networkRole, user: user?.name || user?.email || 'Unknown' })
+          });
+        } catch (e) {
+          // Silent fail if backend unreachable
+        }
+      }, 15000);
+    }
 
     return () => {
         window.removeEventListener('resize', handleResize);
-        clearInterval(heartbeat);
+        if (heartbeat) clearInterval(heartbeat);
     };
   }, [user]);
 
@@ -342,18 +348,24 @@ function AppContent() {
         fetchData(!hasCachedData);
         processSyncQueue();
 
-        const mainChannel = db.channel('db-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'shifts' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'shortage' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, debouncedFetch)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, debouncedFetch)
-            .subscribe();
-
-        channels.push(mainChannel);
+        // Live cross-computer sync (polls the server every few seconds) is only
+        // needed in a multi-computer network setup. On a single computer it just
+        // spammed the console with ERR_NETWORK_CHANGED when wifi/LAN changed and
+        // did no useful work. Enable it only when a network role is configured.
+        const networkRoleSet = localStorage.getItem('tehzeeb_network_role');
+        if (networkRoleSet) {
+            const mainChannel = db.channel('db-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, debouncedFetch)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, debouncedFetch)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, debouncedFetch)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'shifts' }, debouncedFetch)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'shortage' }, debouncedFetch)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, debouncedFetch)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, debouncedFetch)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, debouncedFetch)
+                .subscribe();
+            channels.push(mainChannel);
+        }
     }
 
     return () => {
