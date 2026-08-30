@@ -854,13 +854,16 @@ const Inventory = () => {
             {/* 3. INVENTORY DISPLAY */}
             <div style={{
                 flex: 1,
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
                 background: window.innerWidth <= 768 ? 'transparent' : 'white',
                 border: window.innerWidth <= 768 ? 'none' : '1px solid #e2e8f0',
                 borderRadius: '12px',
                 overflow: 'hidden',
                 boxShadow: window.innerWidth <= 768 ? 'none' : '0 4px 6px -1px rgba(0,0,0,0.1)'
             }}>
-                <div style={{ overflowY: 'auto', height: '100%', paddingBottom: window.innerWidth <= 768 ? '20px' : '0' }}>
+                <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, paddingBottom: window.innerWidth <= 768 ? '20px' : '0' }}>
                     {window.innerWidth > 768 ? (
                         <table className="erp-table">
                             <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: '#8B2500', color: 'white' }}>

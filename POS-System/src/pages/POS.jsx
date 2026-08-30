@@ -411,7 +411,26 @@ const POS = () => {
         if (!activeShift || isCheckingOut) return;
 
         if (cart.length === 0) { toast.error('Add items first!'); return; }
-        if (paymentMethod === 'Credit' && !selectedCustomer) { toast.error('Select an Account!'); return; }
+
+        // KHATA (CREDIT): account/customer MUST be selected first
+        if (paymentMethod === 'Credit' && !selectedCustomer) {
+            toast.error('Khata sale: pehle customer/account select karein!');
+            return;
+        }
+
+        // CASH: "Customer Give" (cash received) is mandatory and must cover the bill,
+        // otherwise do not proceed / print.
+        if (paymentMethod === 'Cash') {
+            const given = parseFloat(cashReceived);
+            if (!cashReceived || isNaN(given) || given <= 0) {
+                toast.error('Customer Give (received amount) likhna zaroori hai!');
+                return;
+            }
+            if (given < finalTotal) {
+                toast.error(`Received Rs ${given} kam hai. Total Rs ${Math.round(finalTotal)} hai.`);
+                return;
+            }
+        }
 
         // STOCK GUARD: block accidental over-selling. Selling more than the
         // available stock is only allowed when the line has an external-sourcing
