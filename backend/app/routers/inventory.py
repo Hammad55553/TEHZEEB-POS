@@ -98,23 +98,23 @@ def create_stock_move(move: StockMoveInput):
 
 class ShortageInput(BaseModel):
     name: str
-    demand_count: int = 1
-    status: str = 'pending'
-    notes: Optional[str] = ''
+    qty: float = 0.0
+    resolved: bool = False
+    note: Optional[str] = ''
 
 @router.get("/shortage")
 def get_shortage():
     with get_cursor() as cur:
-        cur.execute("SELECT * FROM shortage ORDER BY demand_count DESC")
+        cur.execute("SELECT * FROM shortage ORDER BY qty DESC")
         return {"data": [dict(r) for r in cur.fetchall()], "error": None}
 
 @router.post("/shortage")
 def add_shortage(item: ShortageInput):
     with get_cursor(commit=True) as cur:
         cur.execute("""
-            INSERT INTO shortage (name, demand_count, status, notes)
+            INSERT INTO shortage (name, qty, resolved, note)
             VALUES (%s, %s, %s, %s) RETURNING *
-        """, (item.name, item.demand_count, item.status, item.notes))
+        """, (item.name, item.qty, item.resolved, item.note))
         return {"data": [dict(cur.fetchone())], "error": None}
 
 @router.put("/shortage/{item_id}")

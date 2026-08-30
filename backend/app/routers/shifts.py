@@ -8,7 +8,7 @@ router = APIRouter(prefix="/api/shifts", tags=["shifts"])
 @router.get("/")
 def get_shifts():
     with get_cursor() as cur:
-        cur.execute("SELECT * FROM shifts ORDER BY created_at DESC")
+        cur.execute("SELECT * FROM shifts ORDER BY opened_at DESC")
         return {"data": [dict(r) for r in cur.fetchall()], "error": None}
 
 @router.post("/")
