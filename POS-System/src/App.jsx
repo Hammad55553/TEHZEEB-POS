@@ -64,13 +64,23 @@ const PageLoader = () => (
 
 // welcome start-up sound removed
 
-const LockScreen = ({ message }) => (
-  <div style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundColor: '#0f172a', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
-    <h1 style={{ color: '#ef4444', fontSize: '3.5rem', fontWeight: '900', marginBottom: '20px', letterSpacing: '2px' }}>SYSTEM BLOCKED</h1>
+const LockScreen = ({ message }) => {
+  const deviceId = (typeof window !== 'undefined' && (window.__POS_MACHINE__ || localStorage.getItem('tehzeeb_machine_id'))) || '';
+  return (
+  <div style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundColor: '#0f172a', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif', padding: 20 }}>
+    <h1 style={{ color: '#ef4444', fontSize: '3.5rem', fontWeight: '900', marginBottom: '20px', letterSpacing: '2px', textAlign: 'center' }}>SYSTEM BLOCKED</h1>
     <p style={{ fontSize: '1.5rem', textAlign: 'center', maxWidth: '80%', color: '#f8fafc', fontWeight: '600' }}>{message || "Pending Payment"}</p>
-    <p style={{ marginTop: '50px', color: '#64748b', fontSize: '0.9rem' }}>Please contact the developer/administrator to resolve this issue and unlock the system.</p>
+    {deviceId && (
+      <div style={{ marginTop: 30, background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '14px 22px', textAlign: 'center' }}>
+        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, letterSpacing: '1px' }}>YOUR DEVICE ID</div>
+        <div style={{ fontFamily: 'monospace', fontSize: '1.1rem', color: '#fbbf24', fontWeight: 800, marginTop: 4, userSelect: 'all' }}>{deviceId}</div>
+        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 6 }}>Send this ID to your provider to activate.</div>
+      </div>
+    )}
+    <p style={{ marginTop: '40px', color: '#64748b', fontSize: '0.9rem', textAlign: 'center' }}>Please contact the developer/administrator to resolve this issue and unlock the system.</p>
   </div>
-);
+  );
+};
 
 function AppContent() {
   const dispatch = useDispatch();
@@ -93,6 +103,7 @@ function AppContent() {
     const KILL_SWITCH_URL = "https://raw.githubusercontent.com/Hammad55553/TEHZEEB-POS/main/killswitch.json";
 
     const licenseKey = ((typeof window !== 'undefined' && window.__POS_LICENSE__) || localStorage.getItem('tehzeeb_license_key') || '').trim();
+    const machineId = ((typeof window !== 'undefined' && window.__POS_MACHINE__) || localStorage.getItem('tehzeeb_machine_id') || '').trim();
 
     const applyLock = (locked, message) => {
       setIsLocked(locked);
@@ -142,6 +153,18 @@ function AppContent() {
           if (lic.locked === true) {
             applyLock(true, lic.message || 'Account locked. Please contact your provider.');
             localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
+            return;
+          }
+          // MACHINE BINDING: if this license is bound to a specific machine,
+          // it must match THIS computer. A stolen key on another PC = locked.
+          // (If lic.machine is empty, the license is not yet bound to a device;
+          //  you bind it by putting this PC's ID into licenses.json.)
+          if (lic.machine && machineId && lic.machine !== machineId) {
+            applyLock(true, `This license is registered to another computer. Your Device ID: ${machineId}`);
+            return;
+          }
+          if (lic.machine && !machineId) {
+            applyLock(true, 'Cannot read this device ID. Please contact your provider.');
             return;
           }
           // all good online

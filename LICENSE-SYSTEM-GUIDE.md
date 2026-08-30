@@ -65,3 +65,22 @@ Ya install ke baad manually `license.key` ko app ke resources folder mein rakh d
 ---
 Aapka Grand-Dashboard baad mein isi `licenses.json` ko edit/update karega
 (GitHub API se) taake aapko file khud edit na karni pare.
+
+---
+
+## Machine Binding (chori ki key rokna)
+Har license ek KHAAS computer se bandhi ja sakti hai:
+- Client ki app lock screen par uska **Device ID** dikhta hai.
+- Woh ID aapko bheje. Dashboard mein us shop ke card mein "Bound Device ID" box
+  mein woh ID paste karein aur Save karें.
+- Ab wahi key kisi DOOSRE PC par chalegi to LOCK ho jayegi
+  ("registered to another computer"). Chori ki key bekaar.
+- Box khali chhodein = koi bhi PC chal jayega (binding off).
+
+## Lock kaise/kab lagta hai
+- App har ~30 min baad internet se licenses.json check karti hai (aur startup par).
+- Aap `locked: true` karein -> agli check par us shop ki app LOCK.
+- User update kare ya na kare -> lock alag cheez hai, farq nahi parta.
+- Internet chahiye check ke liye. Agar user net band kar de:
+  7 din ki offline grace ke baad app khud LOCK ("offline too long").
+- Data KABHI delete nahi hota -> sirf app band hoti hai. Unlock karte hi wapas.

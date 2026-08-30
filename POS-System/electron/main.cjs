@@ -58,12 +58,34 @@ function createWindow() {
     }
   } catch (e) { /* no license file -> key stays empty */ }
 
-  // Inject the key into the page so React can read it (window.__POS_LICENSE__).
+  // MACHINE FINGERPRINT: a stable id unique to THIS computer, built from
+  // hardware/OS details. Used to bind a license to one machine so a stolen key
+  // won't work on a different PC. No extra package needed.
+  let machineId = '';
+  try {
+    const os = require('os');
+    const crypto = require('crypto');
+    const nets = os.networkInterfaces();
+    let mac = '';
+    for (const name of Object.keys(nets)) {
+      for (const ni of nets[name] || []) {
+        if (ni.mac && ni.mac !== '00:00:00:00:00:00' && !ni.internal) { mac = ni.mac; break; }
+      }
+      if (mac) break;
+    }
+    const cpu = (os.cpus()[0] && os.cpus()[0].model) || '';
+    const raw = [mac, os.hostname(), os.platform(), os.arch(), cpu, os.totalmem()].join('|');
+    machineId = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 24);
+  } catch (e) { machineId = 'unknown'; }
+
+  // Inject the key + machine id into the page so React can read them.
   mainWindow.webContents.on('did-finish-load', () => {
     try {
       mainWindow.webContents.executeJavaScript(
         `window.__POS_LICENSE__ = ${JSON.stringify(licenseKey)};` +
-        `try{ if(${JSON.stringify(licenseKey)}) localStorage.setItem('tehzeeb_license_key', ${JSON.stringify(licenseKey)}); }catch(e){}`
+        `window.__POS_MACHINE__ = ${JSON.stringify(machineId)};` +
+        `try{ if(${JSON.stringify(licenseKey)}) localStorage.setItem('tehzeeb_license_key', ${JSON.stringify(licenseKey)}); }catch(e){}` +
+        `try{ localStorage.setItem('tehzeeb_machine_id', ${JSON.stringify(machineId)}); }catch(e){}`
       );
     } catch (e) {}
   });
