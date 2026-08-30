@@ -4,6 +4,7 @@ import UpdateChecker from '../components/UpdateChecker';
 import { db } from '../database';
 import { Settings as SettingsIcon, Lock, ShieldCheck, Key, AlertCircle, Loader2, FileText, Database, History, Globe, RefreshCw, Download, Cloud, User, Monitor, Server, Activity, ShoppingCart, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
+import packageJson from '../../package.json';
 
 const Settings = () => {
     const { user } = useSelector(state => state.auth);
@@ -404,8 +405,13 @@ const Settings = () => {
                     ) : activeTab === 'updates' ? (
                         <div style={{ animation: 'fadeIn 0.3s ease' }}>
                             <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #f1f5f9' }}>
-                                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><Download size={20} color="#0284c7" /> Software Updates</h3>
-                                <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Check for and install the latest versions of the POS system.</p>
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Download size={20} color="#0284c7" /> Software Updates
+                                    <span style={{ fontSize: '0.7rem', background: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
+                                        v{packageJson.version}
+                                    </span>
+                                </h3>
+                                <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Check for and install the latest versions of the POS system. Current installed version is v{packageJson.version}.</p>
                             </div>
                             <div style={{ maxWidth: '400px' }}>
                                 <UpdateChecker />

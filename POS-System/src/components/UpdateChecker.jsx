@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Download, AlertCircle, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import packageJson from '../../package.json';
 
 const { ipcRenderer } = window.require ? window.require('electron') : { ipcRenderer: null };
 
@@ -83,7 +84,7 @@ const UpdateChecker = () => {
             border: '1px solid #8B2500' 
         }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '0.65rem', fontWeight: 900, color: '#FFB84D', letterSpacing: '0.5px' }}>SYSTEM VERSION 1.0.0</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 900, color: '#FFB84D', letterSpacing: '0.5px' }}>SYSTEM VERSION {packageJson.version}</span>
                 {updateStatus === 'checking' && <RefreshCw size={12} className="animate-spin" color="#FFB84D" />}
             </div>
 
