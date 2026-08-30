@@ -1,12 +1,6 @@
 {
-  "TZB-001": {
-    "shop_name": "Tehzeeb (old key)",
-    "locked": false,
-    "no_offline_lock": true,
-    "update_enabled": true
-  },
   "TZB-0001-ASPER-AITPL": {
-    "shop_name": "Tehzeeb Bakery ",
+    "shop_name": "Tehzeeb Bakery",
     "locked": false,
     "no_offline_lock": true,
     "update_enabled": true,
