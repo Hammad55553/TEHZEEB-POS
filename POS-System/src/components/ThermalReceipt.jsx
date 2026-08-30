@@ -119,12 +119,16 @@ const ThermalReceipt = ({ lastSale, activeShift, logo }) => {
             </div>
 
             {/* FOOTER */}
-            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '9px' }}>
-                <div style={{ borderTop: '1px dashed #000', paddingTop: '10px' }}></div>
+            <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '9px' }}>
+                <div style={{ borderTop: '1px dashed #000', paddingTop: '5px' }}></div>
                 <p style={{ margin: '0 0 2px 0', fontWeight: 'bold', fontSize: '10px' }}>THANK YOU FOR VISITING </p>
-                <p style={{ margin: '4px 0 0 0', fontWeight: 600 }}>No return/exchange without original bill.</p>
-                <p style={{ margin: 0 }}>Thank you for shopping with us!</p>
-                <div style={{ marginTop: '4px', fontSize: '8px', color: '#555' }}>
+                <div style={{ margin: '4px 0', fontSize: '9px', fontWeight: 600, textAlign: 'left' }}>
+                    Check order & cash before leaving.<br/>
+                    * Not valid for court challenge.<br/>
+                    * No return/exchange without original bill.
+                </div>
+                <p style={{ margin: 0, fontWeight: 'bold' }}>Thank you for shopping with us!</p>
+                <div style={{ marginTop: '15px', fontSize: '8px', color: '#555' }}>
                     Software developed by <b>asperinfotech.com</b>
                 </div>
             </div>

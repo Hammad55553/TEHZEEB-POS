@@ -81,24 +81,73 @@ function AppContent() {
   const [lockMessage, setLockMessage] = useState(localStorage.getItem('tehzeeb_lock_message') || 'Pending Payment');
 
   useEffect(() => {
-    // 🔴 DANGER: URL for the kill switch. Create a secret GitHub Gist with raw JSON: {"locked": true, "message": "Payment Pending"}
-    // If you don't want to use it right now, you can leave it. It will fail silently and stay unlocked.
-    const KILL_SWITCH_URL = "https://raw.githubusercontent.com/Hammad55553/TEHZEEB-POS/main/killswitch.json"; 
-    
-    fetch(KILL_SWITCH_URL, { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.locked === true) {
-          setIsLocked(true);
-          setLockMessage(data.message || 'Pending Payment');
-          localStorage.setItem('tehzeeb_system_locked', 'true');
-          localStorage.setItem('tehzeeb_lock_message', data.message || 'Pending Payment');
-        } else if (data && data.locked === false) {
-          setIsLocked(false);
-          localStorage.setItem('tehzeeb_system_locked', 'false');
+    // ===================== LICENSE / REMOTE CONTROL =====================
+    // Central licenses file (edit this from your Grand-Dashboard). Shape:
+    // {
+    //   "TZB-001": { "locked": false, "expiry": "2026-12-31", "message": "", "update_enabled": true },
+    //   "SHOP-XYZ": { "locked": true,  "expiry": "2026-06-30", "message": "Payment pending" }
+    // }
+    // Each shop is identified by its own license key (set once per install).
+    const LICENSES_URL = "https://raw.githubusercontent.com/Hammad55553/TEHZEEB-POS/main/licenses.json";
+    // Backward-compatible global kill switch (locks ALL installs if locked:true).
+    const KILL_SWITCH_URL = "https://raw.githubusercontent.com/Hammad55553/TEHZEEB-POS/main/killswitch.json";
+
+    const licenseKey = ((typeof window !== 'undefined' && window.__POS_LICENSE__) || localStorage.getItem('tehzeeb_license_key') || '').trim();
+
+    const applyLock = (locked, message) => {
+      setIsLocked(locked);
+      setLockMessage(message || 'Pending Payment');
+      localStorage.setItem('tehzeeb_system_locked', locked ? 'true' : 'false');
+      if (message) localStorage.setItem('tehzeeb_lock_message', message);
+    };
+
+    const checkLicense = async () => {
+      // 1) Per-shop license (only if this install has a key)
+      if (licenseKey) {
+        try {
+          const res = await fetch(`${LICENSES_URL}?t=${Date.now()}`, { cache: 'no-store' });
+          if (res.ok) {
+            const all = await res.json();
+            const lic = all && all[licenseKey];
+            if (lic) {
+              // expired?
+              if (lic.expiry) {
+                const exp = new Date(lic.expiry + 'T23:59:59');
+                if (!isNaN(exp) && exp < new Date()) {
+                  applyLock(true, lic.message || 'License expired. Please renew.');
+                  localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
+                  return;
+                }
+              }
+              if (lic.locked === true) {
+                applyLock(true, lic.message || 'Account locked. Please contact provider.');
+              } else {
+                applyLock(false, '');
+              }
+              localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
+              return; // per-license decision is final
+            }
+            // key not found in list -> treat as not-yet-activated but do not hard lock
+          }
+        } catch (e) { /* offline: keep last known status */ }
+      }
+
+      // 2) Global kill switch fallback (locks everyone) — also lets you disable
+      //    installs that have no license key yet.
+      try {
+        const res = await fetch(`${KILL_SWITCH_URL}?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.locked === true) applyLock(true, data.message);
+          else if (data && data.locked === false) applyLock(false, '');
         }
-      })
-      .catch(() => { /* Silent fail: use local cached status */ });
+      } catch (e) { /* offline: keep last known status */ }
+    };
+
+    checkLicense();
+    // Re-check every 30 min so a lock/unlock reaches the shop without a restart.
+    const licTimer = setInterval(checkLicense, 30 * 60 * 1000);
+    return () => clearInterval(licTimer);
   }, []);
 
   if (isLocked) {

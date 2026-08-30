@@ -64,6 +64,13 @@ const UpdateChecker = () => {
             toast.error('Not running in Desktop mode');
             return;
         }
+        // Provider-controlled: updates only run when enabled for this license.
+        // You control this from the central licenses file (update_enabled).
+        const updatesEnabled = localStorage.getItem('tehzeeb_update_enabled');
+        if (updatesEnabled === 'false') {
+            toast.error('Updates are managed by your provider. Please contact them.');
+            return;
+        }
         setUpdateStatus('checking');
         ipcRenderer.send('check-for-updates');
     };

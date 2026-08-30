@@ -38,6 +38,31 @@ function createWindow() {
     },
   });
 
+  // LICENSE: read the hidden per-shop license key that YOU place at install time.
+  // File location (production): next to the app in resources, named "license.key".
+  // Contains just the key text, e.g.  TZB-001
+  let licenseKey = '';
+  try {
+    const fs = require('fs');
+    const licPaths = [
+      path.join(process.resourcesPath || __dirname, 'license.key'),
+      path.join(__dirname, '..', 'license.key'),
+    ];
+    for (const p of licPaths) {
+      if (fs.existsSync(p)) { licenseKey = String(fs.readFileSync(p, 'utf8')).trim(); break; }
+    }
+  } catch (e) { /* no license file -> key stays empty */ }
+
+  // Inject the key into the page so React can read it (window.__POS_LICENSE__).
+  mainWindow.webContents.on('did-finish-load', () => {
+    try {
+      mainWindow.webContents.executeJavaScript(
+        `window.__POS_LICENSE__ = ${JSON.stringify(licenseKey)};` +
+        `try{ if(${JSON.stringify(licenseKey)}) localStorage.setItem('tehzeeb_license_key', ${JSON.stringify(licenseKey)}); }catch(e){}`
+      );
+    } catch (e) {}
+  });
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
   } else {

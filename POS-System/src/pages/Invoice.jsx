@@ -155,7 +155,16 @@ function Invoice() {
         <tr class="tot"><td><b>TOTAL</b></td><td colspan="3" style="text-align:right"><b>Rs ${(total || 0).toLocaleString()}</b></td></tr>
         <tr><td>Payment</td><td colspan="3" style="text-align:right">${sale.payment_method || 'Cash'}</td></tr>
       </tbody></table>
-      <div class="foot">Shukriya! Dobara tashreef laayein.<br/>*** ${STORE_NAME} ***<br/><span style="font-size: 9px; color: #555; display: inline-block; margin-top: 4px;">Software developed by <b>asperinfotech.com</b></span></div>
+      <div class="foot">
+        Shukriya! Dobara tashreef laayein.<br/>
+        *** ${STORE_NAME} ***<br/>
+        <div style="margin: 4px 0; font-size: 9px; font-weight: 600; text-align: left;">
+          Check order & cash before leaving.<br/>
+          * Not valid for court challenge.<br/>
+          * No return/exchange without original bill.
+        </div>
+        <span style="font-size: 8px; color: #555; display: inline-block; margin-top: 10px;">Software developed by <b>asperinfotech.com</b></span>
+      </div>
       <script>window.onload=function(){window.print();};</script>
       </body></html>`;
     const w = window.open('', '_blank', 'width=350,height=600');
