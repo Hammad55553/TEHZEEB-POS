@@ -3,6 +3,10 @@ const path = require('path');
 const { autoUpdater } = require('electron-updater');
 const isDev = !app.isPackaged;
 
+// MEMORY: cap the renderer's JS heap so the app can never balloon to GBs.
+// 1024MB is plenty for a POS UI and prevents runaway growth.
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=1024');
+
 const { spawn } = require('child_process');
 let mainWindow;
 let backendProcess = null;
@@ -14,10 +18,10 @@ function startBackend() {
   backendProcess = spawn(backendPath, [], {
     detached: false,
     windowsHide: true,
+    // 'ignore' stdio so the backend's console output is NOT piped into and
+    // accumulated by Electron's memory over long running sessions (major leak fix).
+    stdio: 'ignore',
   });
-
-  backendProcess.stdout.on('data', (data) => console.log(`Backend: ${data}`));
-  backendProcess.stderr.on('data', (data) => console.error(`Backend Error: ${data}`));
 }
 
 function createWindow() {
@@ -29,6 +33,8 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      backgroundThrottling: true,  // reduce CPU/memory when window not focused
+      spellcheck: false,           // spellchecker dictionaries eat memory
     },
   });
 
