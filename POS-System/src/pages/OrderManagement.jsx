@@ -495,7 +495,7 @@ const OrderManagement = () => {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '0.6rem', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>#{order.id?.slice(-6) || 'ORDER'}</span>
+                                        <span style={{ fontSize: '0.6rem', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>#{String(order.id ?? '').slice(-6) || 'ORDER'}</span>
                                         {order.type === 'Outgoing' ? <ArrowUpCircle size={14} color="#6366f1" /> : <ArrowDownCircle size={14} color="#FF8A1E" />}
                                     </div>
                                     <h4 style={{ fontSize: '1.2rem', fontWeight: 950, color: '#0f172a', marginTop: '6px', lineHeight: 1.2 }}>{order.supplier}</h4>
@@ -877,7 +877,7 @@ const OrderManagement = () => {
                                         <div style={{ padding: '10px 20px', background: '#1e293b', color: 'white', borderRadius: '12px', display: 'inline-block' }}>
                                             <h2 style={{ fontSize: '1.2rem', fontWeight: 900 }}>SUPPLY ORDER</h2>
                                         </div>
-                                        <p style={{ fontSize: '0.85rem', fontWeight: 800, marginTop: '10px' }}>No: #ORD-{selectedOrder.id?.slice(-6).toUpperCase() || 'NEW'}</p>
+                                        <p style={{ fontSize: '0.85rem', fontWeight: 800, marginTop: '10px' }}>No: #ORD-{String(selectedOrder.id ?? '').slice(-6).toUpperCase() || 'NEW'}</p>
                                         <p style={{ fontSize: '0.85rem', fontWeight: 800 }}>Date: {new Date(selectedOrder.booking_date || selectedOrder.bookingDate).toLocaleDateString('en-GB')}</p>
                                     </div>
                                 </div>
