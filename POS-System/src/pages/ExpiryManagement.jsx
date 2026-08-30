@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import Pagination from '../components/Pagination';
 import { motion } from 'framer-motion';
 import { 
     Calendar, 
@@ -18,6 +19,8 @@ const ExpiryManagement = () => {
     const isAdmin = user?.role === 'admin';
     const [searchTerm, setSearchTerm] = React.useState('');
     const [activeTab, setActiveTab] = React.useState('All'); // All, Critical, Pre-Critical
+    const [page, setPage] = React.useState(1);
+    const PAGE_SIZE = 100;
 
     const processedItems = useMemo(() => {
         return items.filter(item => {
@@ -46,6 +49,14 @@ const ExpiryManagement = () => {
             return daysA - daysB;
         });
     }, [items, searchTerm, activeTab]);
+
+    const totalPages = Math.max(1, Math.ceil(processedItems.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pagedItems = useMemo(
+        () => processedItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+        [processedItems, safePage]
+    );
+    React.useEffect(() => { setPage(1); }, [searchTerm, activeTab]);
 
     const stats = {
         critical: items.filter(i => i.expiry && Math.ceil((new Date(i.expiry) - new Date()) / (1000 * 60 * 60 * 24)) <= (i.critical_days || 60)).length,
@@ -188,12 +199,9 @@ const ExpiryManagement = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {processedItems.map((item, idx) => (
-                                    <motion.tr 
+                                {pagedItems.map((item, idx) => (
+                                    <tr 
                                         key={item.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.03 }}
                                         style={{ borderBottom: '1px solid #f1f5f9' }}
                                     >
                                         <td style={{ padding: '15px 20px' }}>
@@ -238,23 +246,20 @@ const ExpiryManagement = () => {
                                                 </button>
                                             )}
                                         </td>
-                                    </motion.tr>
+                                    </tr>
                                 ))}
                             </tbody>
                         </table>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', paddingBottom: '20px' }}>
-                            {processedItems.map((item, idx) => {
+                            {pagedItems.map((item, idx) => {
                                 const days = Math.ceil((new Date(item.expiry) - new Date()) / (1000 * 60 * 60 * 24));
                                 const isCritical = days <= (item.critical_days || 60);
                                 const isPreCritical = days <= 120;
                                 
                                 return (
-                                    <motion.div 
+                                    <div 
                                         key={item.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
                                         style={{ 
                                             background: 'white', 
                                             padding: '15px', 
@@ -295,7 +300,7 @@ const ExpiryManagement = () => {
                                                 </button>
                                             )}
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 );
                             })}
                         </div>
@@ -310,6 +315,14 @@ const ExpiryManagement = () => {
                             <p style={{ color: '#cbd5e1', fontSize: '0.85rem', fontWeight: 600, marginTop: '5px' }}>All medications are well within their shelf-life.</p>
                         </div>
                     )}
+
+                    <Pagination
+                        page={safePage}
+                        totalPages={totalPages}
+                        totalItems={processedItems.length}
+                        pageSize={PAGE_SIZE}
+                        onChange={setPage}
+                    />
                 </div>
             </div>
         </div>
