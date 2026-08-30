@@ -250,9 +250,28 @@ class Channel {
     return this;
   }
   subscribe(cb) {
-    // Local offline app: no background polling. Data changes are made by this
-    // same app and reflected immediately, so a 4s full-refetch loop only wastes
-    // CPU/RAM (re-loading thousands of products + sales). Disabled for speed.
+    let lastSyncTimestamp = 0;
+    
+    this._timer = setInterval(async () => {
+      try {
+        const res = await fetch(`http://${window.location.hostname || '127.0.0.1'}:8000/network/sync`);
+        if (res.ok) {
+          const data = await res.json();
+          const serverUpdate = data.last_update || 0;
+          if (lastSyncTimestamp === 0) {
+            // Initialize timestamp
+            lastSyncTimestamp = serverUpdate;
+          } else if (serverUpdate > lastSyncTimestamp) {
+            // Changes detected from another computer! Trigger a refresh.
+            lastSyncTimestamp = serverUpdate;
+            this._handlers.forEach((h) => { try { h({}); } catch {} });
+          }
+        }
+      } catch (err) {
+        // Ignore if server is offline
+      }
+    }, 4000);
+
     if (cb) cb('SUBSCRIBED');
     return this;
   }

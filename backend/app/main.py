@@ -45,6 +45,23 @@ def _shutdown():
 def health():
     return {"ok": True, "app": config.APP_NAME}
 
+import time
+from fastapi import Request
+
+GLOBAL_LAST_UPDATE = time.time()
+
+@app.middleware("http")
+async def update_global_timestamp(request: Request, call_next):
+    response = await call_next(request)
+    if request.method in ["POST", "PUT", "DELETE"] and response.status_code < 400:
+        global GLOBAL_LAST_UPDATE
+        GLOBAL_LAST_UPDATE = time.time()
+    return response
+
+@app.get("/network/sync")
+def get_network_sync():
+    return {"last_update": GLOBAL_LAST_UPDATE}
+
 import socket
 import time
 from fastapi import Request
