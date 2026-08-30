@@ -141,6 +141,14 @@ function AppContent() {
             applyLock(true, 'Invalid license. Please contact your provider.');
             return;
           }
+          // OWNER licenses (your own shops): never lock, never expire, no offline
+          // limit, no machine binding. Fully free.
+          if (lic.owner === true) {
+            applyLock(false, '');
+            localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
+            markVerified();
+            return;
+          }
           // expired?
           if (lic.expiry) {
             const exp = new Date(lic.expiry + 'T23:59:59');
@@ -170,13 +178,24 @@ function AppContent() {
           // all good online
           applyLock(false, '');
           localStorage.setItem('tehzeeb_update_enabled', String(lic.update_enabled !== false));
+          try {
+            localStorage.setItem('tehzeeb_is_owner', lic.owner === true ? 'true' : 'false');
+            localStorage.setItem('tehzeeb_no_offline_lock', lic.no_offline_lock === true ? 'true' : 'false');
+          } catch(e){}
           markVerified();
           return;
         }
         // server returned non-OK -> treat like offline (grace)
       } catch (e) { /* offline */ }
 
-      // OFFLINE: only allow if we verified OK recently; otherwise lock.
+      // OFFLINE: owner installs, or licenses marked no_offline_lock, never lock
+      // offline (e.g. a trusted shop with unreliable internet).
+      if (localStorage.getItem('tehzeeb_is_owner') === 'true' ||
+          localStorage.getItem('tehzeeb_no_offline_lock') === 'true') {
+        applyLock(false, '');
+        return;
+      }
+      // Others: only allow if we verified OK recently; otherwise lock.
       if (withinGrace()) {
         applyLock(false, '');
       } else {
