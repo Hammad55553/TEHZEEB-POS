@@ -11,13 +11,13 @@ export const EULA_DOC_ID = 'AINF-EULA-POS-2026-002';
 export const EULA_CONTENT = `════════════════════════════════════════════════════════════════════════
 END-USER SOFTWARE LICENSE AGREEMENT (EULA)
 TEHZEEB SWEETS & SUPER STORE — POINT OF SALE
-Developed by ASPER INFOTECH (AITPL)
+Developed by ASPER INFOTECH (Private) Limited
 ════════════════════════════════════════════════════════════════════════
 
 Document       : ${'AINF-EULA-POS-2026-002'}
 Version        : ${packageJson.version} Stable
 Effective Date : 2026
-Provider       : Asper InfoTech (AITPL)
+Provider       : Asper InfoTech (Private) Limited
 Jurisdiction   : Islamic Republic of Pakistan
 
 Please read this Agreement carefully before installing or using the
@@ -114,7 +114,7 @@ install or use the Software.
 
 14. CONTACT / SUPPORT
     For activation, renewal, support or any query, contact your provider:
-        Asper InfoTech (AITPL)
+        Asper InfoTech (Private) Limited
         Website : asperinfotech.com
 
 ────────────────────────────────────────────────────────────────────────
@@ -122,7 +122,7 @@ By installing or using this Software you acknowledge that you have read,
 understood and agreed to this Agreement.
 ────────────────────────────────────────────────────────────────────────
 TEHZEEB SWEETS & SUPER STORE — POINT OF SALE
-Powered by Asper InfoTech (AITPL)
+Powered by Asper InfoTech (Private) Limited
 © 2026 Asper InfoTech | ALL RIGHTS RESERVED
 ════════════════════════════════════════════════════════════════════════`;
 
