@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
     ShoppingCart,
@@ -294,16 +294,23 @@ const POS = () => {
         }
     }, [searchTerm, inventory]);
 
-    const filteredInventory = inventory.filter(item => {
-        const matchesSearch =
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            String(item.id).toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.barcode && item.barcode.includes(searchTerm)) ||
-            (item.manufacturer && item.manufacturer.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (item.batch_no && item.batch_no.toLowerCase().includes(searchTerm.toLowerCase()));
-        const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
-        return matchesSearch && matchesCat;
-    });
+    const filteredInventory = useMemo(() => {
+        const q = (searchTerm || '').toLowerCase().trim();
+        // Performance: with thousands of products, don't render the whole catalog
+        // when nothing is searched and no category is picked. Show results only
+        // once the user searches or selects a category.
+        if (!q && selectedCategory === 'All') return [];
+        return inventory.filter(item => {
+            const matchesSearch = !q ||
+                item.name.toLowerCase().includes(q) ||
+                String(item.id).toLowerCase().includes(q) ||
+                (item.barcode && item.barcode.includes(searchTerm)) ||
+                (item.manufacturer && item.manufacturer.toLowerCase().includes(q)) ||
+                (item.batch_no && item.batch_no.toLowerCase().includes(q));
+            const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
+            return matchesSearch && matchesCat;
+        });
+    }, [searchTerm, selectedCategory, inventory]);
 
     const addToCart = (product) => {
         const inventoryItem = inventory.find(i => i.id === product.id);
