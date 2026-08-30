@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const inventorySlice = createSlice({
     name: 'inventory',
     initialState: {
-        items: JSON.parse(localStorage.getItem('tehzeeb_inventory')) || []
+        items: []
     },
     reducers: {
         addItem: (state, action) => {
@@ -14,7 +14,6 @@ const inventorySlice = createSlice({
                 total_sold: 0
             };
             state.items.push(newItem);
-            localStorage.setItem('tehzeeb_inventory', JSON.stringify(state.items));
         },
         updateStock: (state, action) => {
             const { id, quantity, mode } = action.payload;
@@ -35,7 +34,6 @@ const inventorySlice = createSlice({
                     item.total_sold = (item.total_sold || 0) + quantity;
                 }
             }
-            localStorage.setItem('tehzeeb_inventory', JSON.stringify(state.items));
         },
         editItem: (state, action) => {
             const index = state.items.findIndex(i => i.id === action.payload.id);
@@ -45,15 +43,12 @@ const inventorySlice = createSlice({
                     ...action.payload
                 };
             }
-            localStorage.setItem('tehzeeb_inventory', JSON.stringify(state.items));
         },
         setInventory: (state, action) => {
             state.items = action.payload;
-            localStorage.setItem('tehzeeb_inventory', JSON.stringify(state.items));
         },
         deleteItem: (state, action) => {
             state.items = state.items.filter(i => i.id !== action.payload);
-            localStorage.setItem('tehzeeb_inventory', JSON.stringify(state.items));
         }
     }
 });

@@ -3,8 +3,8 @@ import { createSlice } from '@reduxjs/toolkit';
 const shiftSlice = createSlice({
     name: 'shift',
     initialState: {
-        activeShift: JSON.parse(localStorage.getItem('tehzeeb_shift')) || null,
-        history: JSON.parse(localStorage.getItem('tehzeeb_shift_history')) || []
+        activeShift: null,
+        history: []
     },
     reducers: {
         startShift: (state, action) => {
@@ -18,7 +18,6 @@ const shiftSlice = createSlice({
                 status: 'Open'
             };
             state.activeShift = newShift;
-            localStorage.setItem('tehzeeb_shift', JSON.stringify(newShift));
         },
         endShift: (state, action) => {
             if (state.activeShift) {
@@ -31,29 +30,24 @@ const shiftSlice = createSlice({
                 state.history.unshift(closedShift);
                 state.activeShift = null;
                 localStorage.removeItem('tehzeeb_shift');
-                localStorage.setItem('tehzeeb_shift_history', JSON.stringify(state.history));
             }
         },
         updateShiftStats: (state, action) => {
             if (state.activeShift) {
                 state.activeShift.sales += action.payload.sale || 0;
                 state.activeShift.expenses += action.payload.expense || 0;
-                localStorage.setItem('tehzeeb_shift', JSON.stringify(state.activeShift));
             }
         },
         setShifts: (state, action) => {
             state.history = action.payload.history;
             state.activeShift = action.payload.activeShift || null;
-            localStorage.setItem('tehzeeb_shift_history', JSON.stringify(state.history));
             if (state.activeShift) {
-                localStorage.setItem('tehzeeb_shift', JSON.stringify(state.activeShift));
             } else {
                 localStorage.removeItem('tehzeeb_shift');
             }
         },
         deleteShift: (state, action) => {
             state.history = state.history.filter(s => s.id !== action.payload);
-            localStorage.setItem('tehzeeb_shift_history', JSON.stringify(state.history));
         }
     }
 });

@@ -10,18 +10,19 @@ import expensesReducer from './slices/expensesSlice';
 import suppliersReducer from './slices/suppliersSlice';
 import uiReducer from './slices/uiSlice';
 
-// 1. Load data from LocalStorage
-const loadState = () => {
-    try {
-        const serializedState = localStorage.getItem('tehzeeb_pos_state');
-        if (serializedState === null) return undefined;
-        return JSON.parse(serializedState);
-    } catch (err) {
-        return undefined;
-    }
-};
+// 1. No longer preload a giant localStorage blob into memory. Data loads from
+// the local PostgreSQL DB on startup. We also proactively clear old cached
+// blobs so upgraded installs release that memory/disk.
+try {
+    localStorage.removeItem('tehzeeb_pos_state');
+    localStorage.removeItem('tehzeeb_inventory');
+    localStorage.removeItem('tehzeeb_sales');
+    localStorage.removeItem('tehzeeb_customers');
+    localStorage.removeItem('tehzeeb_shift');
+    localStorage.removeItem('tehzeeb_shift_history');
+} catch (e) { /* ignore */ }
 
-const persistedState = loadState();
+const persistedState = undefined;
 
 export const store = configureStore({
     reducer: {
@@ -45,15 +46,11 @@ export const store = configureStore({
 // lag during rapid UI updates. Now we wait until changes settle (500ms) and
 // write once. We also skip the transient `ui` slice (calculator open/close etc.)
 // since it doesn't need to survive reloads.
-let saveTimer = null;
-store.subscribe(() => {
-    if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-        try {
-            const { ui, ...persistable } = store.getState();
-            localStorage.setItem('tehzeeb_pos_state', JSON.stringify(persistable));
-        } catch (err) {
-            // Ignore write errors (e.g. storage quota exceeded).
-        }
-    }, 500);
-});
+// MEMORY/SPEED: We run fully offline on PostgreSQL, so the heavy tables
+// (inventory, sales, customers, orders, expenses, suppliers, shortage) do NOT
+// need a second copy in localStorage — that duplicate kept memory high and
+// serialized megabytes of JSON on every change. Data now comes straight from
+// the local DB. We keep only tiny, non-DB UI/session bits in localStorage.
+// (auth token is handled separately in database.js.)
+//
+// No global store.subscribe persister anymore.

@@ -62,23 +62,31 @@ const Inventory = () => {
         return unique.sort();
     }, [inventory]);
 
-    const filteredItems = inventory.filter(item => {
-        const matchesSearch =
-            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.id && String(item.id).includes(searchTerm)) ||
-            (item.barcode && item.barcode.includes(searchTerm)) ||
-            (item.manufacturer && item.manufacturer.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (item.batch_no && item.batch_no.toLowerCase().includes(searchTerm.toLowerCase()));
-        const matchesCat = selectedCategory === 'All Categories' || item.category === selectedCategory;
-        const matchesMan = selectedManufacturer === 'All Companies' || item.manufacturer === selectedManufacturer;
-        return matchesSearch && matchesCat && matchesMan;
-    });
+    // useMemo: only re-filter when the data or search/filter actually changes,
+    // instead of rebuilding the whole filtered array on every single render
+    // (that churn kept memory high and never settled).
+    const filteredItems = React.useMemo(() => {
+        const q = searchTerm.toLowerCase();
+        return inventory.filter(item => {
+            const matchesSearch =
+                item.name?.toLowerCase().includes(q) ||
+                (item.id && String(item.id).includes(searchTerm)) ||
+                (item.barcode && String(item.barcode).includes(searchTerm)) ||
+                (item.manufacturer && item.manufacturer.toLowerCase().includes(q)) ||
+                (item.batch_no && item.batch_no.toLowerCase().includes(q));
+            const matchesCat = selectedCategory === 'All Categories' || item.category === selectedCategory;
+            const matchesMan = selectedManufacturer === 'All Companies' || item.manufacturer === selectedManufacturer;
+            return matchesSearch && matchesCat && matchesMan;
+        });
+    }, [inventory, searchTerm, selectedCategory, selectedManufacturer]);
 
-    // PAGINATION: only render PAGE_SIZE rows at a time. Rendering thousands of
-    // rows (each with a <Barcode/> SVG) was using GBs of memory and crashing.
+    // PAGINATION: only render PAGE_SIZE rows at a time.
     const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
     const safePage = Math.min(currentPage, totalPages);
-    const pagedItems = filteredItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+    const pagedItems = React.useMemo(
+        () => filteredItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+        [filteredItems, safePage]
+    );
 
     // When search/filter changes, jump back to page 1
     React.useEffect(() => { setCurrentPage(1); }, [searchTerm, selectedCategory, selectedManufacturer]);
