@@ -19,7 +19,7 @@ const Settings = () => {
     React.useEffect(() => {
         const fetchIp = async () => {
             try {
-                const res = await fetch("http://" + window.location.hostname + ":8000/network/info");
+                const res = await fetch("http://" + (window.location.hostname || "127.0.0.1") + ":8000/network/info");
                 if (res.ok) {
                     const data = await res.json();
                     if (data.ip) setServerIp(data.ip);

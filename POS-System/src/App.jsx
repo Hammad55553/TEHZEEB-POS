@@ -176,7 +176,7 @@ function AppContent() {
       try {
         const localApiBase = localStorage.getItem('tehzeeb_server_ip');
         const role = localStorage.getItem('tehzeeb_network_role') || 'client';
-        const url = (localApiBase || (window.__POS_API_BASE__ || `http://${window.location.hostname}:8000`)).replace(/\/$/, '');
+        const url = (localApiBase || (window.__POS_API_BASE__ || `http://${window.location.hostname || '127.0.0.1'}:8000`)).replace(/\/$/, '');
         await fetch(`${url}/network/heartbeat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -275,7 +275,7 @@ function AppContent() {
         try {
             // 1. Initial Fetch (parallel, but each reports progress on finish)
             const localApiBase = localStorage.getItem('tehzeeb_server_ip');
-            const baseUrl = (localApiBase || (window.__POS_API_BASE__ || `http://${window.location.hostname}:8000`)).replace(/\/$/, '');
+            const baseUrl = (localApiBase || (window.__POS_API_BASE__ || `http://${window.location.hostname || '127.0.0.1'}:8000`)).replace(/\/$/, '');
             
             const fetchApi = async (path) => {
                 const res = await fetch(`${baseUrl}${path}`);
@@ -389,7 +389,7 @@ function AppContent() {
     try {
         // Force Refetch from Database
         const localApiBase = localStorage.getItem('tehzeeb_server_ip');
-        const baseUrl = (localApiBase || (window.__POS_API_BASE__ || `http://${window.location.hostname}:8000`)).replace(/\/$/, '');
+        const baseUrl = (localApiBase || (window.__POS_API_BASE__ || `http://${window.location.hostname || '127.0.0.1'}:8000`)).replace(/\/$/, '');
         const fetchApi = async (path) => {
             const res = await fetch(`${baseUrl}${path}`);
             return res.json();
