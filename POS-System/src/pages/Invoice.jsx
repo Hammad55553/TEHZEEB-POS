@@ -76,21 +76,36 @@ function Invoice() {
     if (!q) { toast.error('Search likhein (invoice id ya customer name)'); return; }
     setReprintLoading(true);
     try {
-      const { data, error } = await db
-        .from('sales')
-        .select('*, sale_items(*)')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      const list = data || [];
-      const ql = q.toLowerCase();
-      const filtered = list.filter((s) => {
-        const idMatch = String(s?.id || '').toLowerCase().includes(ql);
-        const nameMatch = String(s?.customer_name || '').toLowerCase().includes(ql);
-        return idMatch || nameMatch;
-      });
-      setReprintResults(filtered.slice(0, 30));
-      if (filtered.length === 0) toast('No invoice found', { icon: 'ℹ️' });
+      const isNumeric = /^\d+$/.test(q);
+      let rows = [];
+
+      if (isNumeric) {
+        // Search by exact invoice id first (fast, indexed) — no full-table load
+        const { data, error } = await db
+          .from('sales')
+          .select('*, sale_items(*)')
+          .eq('id', Number(q))
+          .is('deleted_at', null)
+          .limit(30);
+        if (error) throw error;
+        rows = data || [];
+      }
+
+      // If not numeric, or numeric id gave nothing, search by customer name
+      if (rows.length === 0) {
+        const { data, error } = await db
+          .from('sales')
+          .select('*, sale_items(*)')
+          .ilike('customer_name', `%${q}%`)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(30);
+        if (error) throw error;
+        rows = data || [];
+      }
+
+      setReprintResults((rows || []).slice(0, 30));
+      if (!rows || rows.length === 0) toast('No invoice found', { icon: 'ℹ️' });
     } catch (e) {
       toast.error('Search fail: ' + (e?.message || 'error'));
       setReprintResults([]);
