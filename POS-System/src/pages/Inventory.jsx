@@ -23,6 +23,8 @@ const Inventory = () => {
     const inventory = useSelector(state => state.inventory.items);
     const isAdmin = user?.role === 'admin';
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 100;
     const [nameSuggestion, setNameSuggestion] = useState('');
     const [mfrSuggestion, setMfrSuggestion] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All Categories');
@@ -63,7 +65,7 @@ const Inventory = () => {
     const filteredItems = inventory.filter(item => {
         const matchesSearch =
             item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.id && item.id.includes(searchTerm)) ||
+            (item.id && String(item.id).includes(searchTerm)) ||
             (item.barcode && item.barcode.includes(searchTerm)) ||
             (item.manufacturer && item.manufacturer.toLowerCase().includes(searchTerm.toLowerCase())) ||
             (item.batch_no && item.batch_no.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -71,6 +73,15 @@ const Inventory = () => {
         const matchesMan = selectedManufacturer === 'All Companies' || item.manufacturer === selectedManufacturer;
         return matchesSearch && matchesCat && matchesMan;
     });
+
+    // PAGINATION: only render PAGE_SIZE rows at a time. Rendering thousands of
+    // rows (each with a <Barcode/> SVG) was using GBs of memory and crashing.
+    const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
+    const safePage = Math.min(currentPage, totalPages);
+    const pagedItems = filteredItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+    // When search/filter changes, jump back to page 1
+    React.useEffect(() => { setCurrentPage(1); }, [searchTerm, selectedCategory, selectedManufacturer]);
 
     // GHOST AUTOCOMPLETE FOR ENROLLMENT
     React.useEffect(() => {
@@ -857,7 +868,7 @@ const Inventory = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredItems.map(item => (
+                                {pagedItems.map(item => (
                                     <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                         <td style={{ padding: '15px 20px' }}>
                                             {item.barcode ? <Barcode value={item.barcode} height={30} width={1.2} fontSize={10} background="transparent" /> : <span style={{ fontSize: '0.6rem', color: '#cbd5e1' }}>NO BARCODE</span>}
@@ -899,7 +910,7 @@ const Inventory = () => {
                         </table>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            {filteredItems.map(item => {
+                            {pagedItems.map(item => {
                                 const isLowStock = item.stock <= (item.min_stock || 5);
                                 return (
                                     <motion.div
@@ -969,6 +980,24 @@ const Inventory = () => {
                             })}
                         </div>
                     )}
+                </div>
+
+                {/* PAGINATION BAR */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 20px', borderTop: '1px solid #f1f5f9', background: '#fff', flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b' }}>
+                        {filteredItems.length === 0 ? 'No products' : `Showing ${(safePage - 1) * PAGE_SIZE + 1}-${Math.min(safePage * PAGE_SIZE, filteredItems.length)} of ${filteredItems.length}`}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button onClick={() => setCurrentPage(1)} disabled={safePage <= 1}
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: safePage <= 1 ? '#f8fafc' : '#fff', color: '#475569', fontWeight: 800, cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1 }}>« First</button>
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={safePage <= 1}
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: safePage <= 1 ? '#f8fafc' : '#fff', color: '#475569', fontWeight: 800, cursor: safePage <= 1 ? 'not-allowed' : 'pointer', opacity: safePage <= 1 ? 0.5 : 1 }}>‹ Prev</button>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#8B2500', padding: '0 6px' }}>Page {safePage} / {totalPages}</span>
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={safePage >= totalPages}
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: safePage >= totalPages ? '#f8fafc' : '#fff', color: '#475569', fontWeight: 800, cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1 }}>Next ›</button>
+                        <button onClick={() => setCurrentPage(totalPages)} disabled={safePage >= totalPages}
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: safePage >= totalPages ? '#f8fafc' : '#fff', color: '#475569', fontWeight: 800, cursor: safePage >= totalPages ? 'not-allowed' : 'pointer', opacity: safePage >= totalPages ? 0.5 : 1 }}>Last »</button>
+                    </div>
                 </div>
             </div>
 
