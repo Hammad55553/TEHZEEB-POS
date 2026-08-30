@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import Pagination from '../components/Pagination';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Truck, 
@@ -27,6 +28,8 @@ const SupplierManagement = () => {
     const suppliers = useSelector(state => state.suppliers.list);
     
     const [searchTerm, setSearchTerm] = useState('');
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 100;
     const [selectedSupplier, setSelectedSupplier] = useState(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isActionModalOpen, setIsActionModalOpen] = useState(false);
@@ -36,10 +39,18 @@ const SupplierManagement = () => {
     const [newSupplier, setNewSupplier] = useState({ name: '', contact: '', company: '', balance: '' });
     const [actionData, setActionData] = useState({ amount: '', note: '' });
 
-    const filteredSuppliers = suppliers.filter(s => 
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        s.company.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredSuppliers = useMemo(() => suppliers.filter(s => 
+        (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (s.company || '').toLowerCase().includes(searchTerm.toLowerCase())
+    ), [suppliers, searchTerm]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredSuppliers.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pagedSuppliers = useMemo(
+        () => filteredSuppliers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+        [filteredSuppliers, safePage]
     );
+    React.useEffect(() => { setPage(1); }, [searchTerm]);
 
     const totalOutstanding = suppliers.reduce((acc, s) => acc + s.balance, 0);
 
@@ -304,10 +315,9 @@ const SupplierManagement = () => {
                         gap: '15px', 
                         paddingBottom: '20px' 
                     }}>
-                        {filteredSuppliers.map((sup) => (
-                            <motion.div 
+                        {pagedSuppliers.map((sup) => (
+                            <div 
                                 key={sup.id}
-                                layoutId={sup.id}
                                 onClick={() => setSelectedSupplier(sup)}
                                 style={{ 
                                     background: 'white', 
@@ -344,9 +354,16 @@ const SupplierManagement = () => {
                                         style={{ flex: 1, padding: '8px', background: '#FFF7E6', border: '1px solid #FFEFD0', color: '#F7941D', borderRadius: '8px', fontSize: '0.65rem', fontWeight: 800, cursor: 'pointer' }}
                                     >PAYMENT</button>
                                 </div>
-                            </motion.div>
+                            </div>
                         ))}
                     </div>
+                    <Pagination
+                        page={safePage}
+                        totalPages={totalPages}
+                        totalItems={filteredSuppliers.length}
+                        pageSize={PAGE_SIZE}
+                        onChange={setPage}
+                    />
                 </div>
 
                 {/* DETAILS PANEL */}

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
+import Pagination from '../components/Pagination';
 import { 
     Database, 
     Search, 
@@ -24,6 +25,8 @@ const StockRecords = () => {
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [timeRange, setTimeRange] = useState('All Time');
     const [expandedProduct, setExpandedProduct] = useState(null);
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 100;
 
     const categories = ['All', ...new Set(inventory.map(i => i.category).filter(Boolean))];
 
@@ -71,12 +74,20 @@ const StockRecords = () => {
         return stats;
     }, [sales, timeRange]); // recompute when the time range changes (was missing)
 
-    const filteredInventory = inventory.filter(item => {
+    const filteredInventory = useMemo(() => inventory.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                             item.id.toString().includes(searchTerm);
+                             String(item.id).includes(searchTerm);
         const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
         return matchesSearch && matchesCat;
-    });
+    }), [inventory, searchTerm, selectedCategory]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredInventory.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pagedInventory = useMemo(
+        () => filteredInventory.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+        [filteredInventory, safePage]
+    );
+    React.useEffect(() => { setPage(1); }, [searchTerm, selectedCategory, timeRange]);
 
     // Summary Totals
     const totalStockValue = inventory.reduce((acc, item) => acc + (item.stock * (item.buy_price || 0)), 0);
@@ -178,7 +189,7 @@ const StockRecords = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredInventory.map(item => {
+                            {pagedInventory.map(item => {
                                 const isExpanded = expandedProduct === item.id;
                                 const dailySales = productStats[item.id]?.dailySales || {};
                                 const salesDates = Object.keys(dailySales).sort((a,b) => new Date(b) - new Date(a));
@@ -264,6 +275,13 @@ const StockRecords = () => {
                             })}
                         </tbody>
                     </table>
+                    <Pagination
+                        page={safePage}
+                        totalPages={totalPages}
+                        totalItems={filteredInventory.length}
+                        pageSize={PAGE_SIZE}
+                        onChange={setPage}
+                    />
                 </div>
             </div>
         </div>
