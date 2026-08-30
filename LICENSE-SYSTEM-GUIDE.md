@@ -3,6 +3,13 @@
 Aap har shop ko POS bech kar door se control kar sakte hain: lock/unlock,
 expiry, aur update on/off. Sab kuch ek file se: `licenses.json` (GitHub par).
 
+## License Key Format
+Har key aise banayein: `TZB-0001-ASPER-AITPL`
+- `TZB`          = product (Tehzeeb POS)
+- `0001`         = shop number (0001, 0002, 0003 ... har shop ka alag)
+- `ASPER-AITPL`  = aapki company (Asper AITPL)
+Yeh format unique + guess-proof hai, aur har key par aapki company ka naam hota hai.
+
 ## 1. Har nayi shop ko install karte waqt
 - Us shop ke liye ek unique **license key** chunein, e.g. `SHOP-ALI-01`.
 - Us key ko ek file mein likhein: **`license.key`** (sirf key text, aur kuch nahi).

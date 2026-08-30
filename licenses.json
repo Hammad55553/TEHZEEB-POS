@@ -1,12 +1,12 @@
 {
-  "TZB-001": {
+  "TZB-0001-ASPER-AITPL": {
     "shop_name": "Tehzeeb Sweets & Super Store",
     "locked": false,
     "expiry": "2027-12-31",
     "message": "",
     "update_enabled": true
   },
-  "DEMO-SHOP": {
+  "TZB-0002-ASPER-AITPL": {
     "shop_name": "Demo Shop (example)",
     "locked": false,
     "expiry": "2026-12-31",
