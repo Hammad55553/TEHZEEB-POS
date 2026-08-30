@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Pagination from '../components/Pagination';
 import { useSelector } from 'react-redux';
 import { db } from '../database';
 import toast from 'react-hot-toast';
@@ -161,21 +162,31 @@ function EmptyState({ text }) {
 const thStyle = { background: C.maroon, color: C.white, padding: '10px 12px', textAlign: 'left', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' };
 const tdStyle = { padding: '9px 12px', fontSize: 13, color: C.text, borderBottom: `1px solid ${C.border}` };
 
+const TABLE_PAGE_SIZE = 100;
 function Table({ headers, rows, totalsRow }) {
-  if (!asArray(rows).length) return <EmptyState />;
+  const all = asArray(rows);
+  const [tPage, setTPage] = React.useState(1);
+  // reset to first page whenever the data set changes size
+  React.useEffect(() => { setTPage(1); }, [all.length]);
+  if (!all.length) return <EmptyState />;
+  const totalPages = Math.max(1, Math.ceil(all.length / TABLE_PAGE_SIZE));
+  const safePage = Math.min(tPage, totalPages);
+  const view = all.slice((safePage - 1) * TABLE_PAGE_SIZE, safePage * TABLE_PAGE_SIZE);
+  const offset = (safePage - 1) * TABLE_PAGE_SIZE;
   return (
+   <>
     <div style={{ overflowX: 'auto', border: `1px solid ${C.border}`, borderRadius: 14, background: C.white }}>
       <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 520 }}>
         <thead>
           <tr>{headers.map((h, i) => <th key={i} style={thStyle}>{h}</th>)}</tr>
         </thead>
         <tbody>
-          {rows.map((r, ri) => (
-            <tr key={ri} style={{ background: ri % 2 ? C.cream : C.white }}>
+          {view.map((r, ri) => (
+            <tr key={offset + ri} style={{ background: (offset + ri) % 2 ? C.cream : C.white }}>
               {r.map((c, ci) => <td key={ci} style={tdStyle}>{c}</td>)}
             </tr>
           ))}
-          {totalsRow && (
+          {totalsRow && safePage === totalPages && (
             <tr style={{ background: C.cream2 }}>
               {totalsRow.map((c, ci) => (
                 <td key={ci} style={{ ...tdStyle, fontWeight: 800, borderTop: `2px solid ${C.copper}` }}>{c}</td>
@@ -185,6 +196,8 @@ function Table({ headers, rows, totalsRow }) {
         </tbody>
       </table>
     </div>
+    <Pagination page={safePage} totalPages={totalPages} totalItems={all.length} pageSize={TABLE_PAGE_SIZE} onChange={setTPage} />
+   </>
   );
 }
 
