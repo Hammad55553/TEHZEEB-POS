@@ -273,6 +273,8 @@ function ReportsHub() {
 
   useEffect(() => {
     let mounted = true;
+    // Hard safety: never let the Reports screen hang on "Loading..." forever
+    const failsafe = setTimeout(() => { if (mounted) setLoading(false); }, 25000);
     async function load() {
       setLoading(true);
       try {
@@ -309,7 +311,7 @@ function ReportsHub() {
       }
     }
     load();
-    return () => { mounted = false; };
+    return () => { mounted = false; clearTimeout(failsafe); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

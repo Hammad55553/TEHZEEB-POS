@@ -269,3 +269,32 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS expected_date DATE;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS done_by      TEXT;
 ALTER TABLE inventory ADD COLUMN IF NOT EXISTS parent_id BIGINT REFERENCES inventory(id);
 ALTER TABLE inventory ADD COLUMN IF NOT EXISTS pack_qty NUMERIC(12,2) DEFAULT 1;
+
+-- ============================================================
+-- PERFORMANCE INDEXES (added to fix slow loading on Reports,
+-- Expiry, Suppliers, Stock, Transfer, Adjustment screens)
+-- ============================================================
+-- Inventory
+CREATE INDEX IF NOT EXISTS idx_inventory_expiry_date ON inventory(expiry_date);
+CREATE INDEX IF NOT EXISTS idx_inventory_category    ON inventory(category);
+CREATE INDEX IF NOT EXISTS idx_inventory_supplier    ON inventory(supplier);
+CREATE INDEX IF NOT EXISTS idx_inventory_created      ON inventory(created_at);
+-- Sales / sale_items
+CREATE INDEX IF NOT EXISTS idx_sales_created         ON sales(created_at);
+CREATE INDEX IF NOT EXISTS idx_sales_status          ON sales(status);
+CREATE INDEX IF NOT EXISTS idx_sale_items_product    ON sale_items(product_id);
+-- Stock moves (transfer / adjustment reports)
+CREATE INDEX IF NOT EXISTS idx_stock_moves_type      ON stock_moves(move_type);
+CREATE INDEX IF NOT EXISTS idx_stock_moves_product   ON stock_moves(product_id);
+CREATE INDEX IF NOT EXISTS idx_stock_moves_deleted   ON stock_moves(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_stock_moves_created   ON stock_moves(created_at);
+-- Orders
+CREATE INDEX IF NOT EXISTS idx_orders_status         ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_supplier_id    ON orders(supplier_id);
+CREATE INDEX IF NOT EXISTS idx_orders_deleted        ON orders(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_orders_created        ON orders(created_at);
+-- Expenses
+CREATE INDEX IF NOT EXISTS idx_expenses_created      ON expenses(created_at);
+CREATE INDEX IF NOT EXISTS idx_expenses_deleted      ON expenses(deleted_at);
+-- Suppliers
+CREATE INDEX IF NOT EXISTS idx_suppliers_deleted     ON suppliers(deleted_at);

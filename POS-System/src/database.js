@@ -42,18 +42,31 @@ function cachedSession() {
 }
 
 async function api(path, body) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify(body || {}),
-  });
-  if (!res.ok) {
-    return { data: null, error: { message: `HTTP ${res.status}` } };
+  // Timeout so a slow/stuck backend can never freeze the UI on "Loading..."
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000); // 20s
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify(body || {}),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      return { data: null, error: { message: `HTTP ${res.status}` } };
+    }
+    return await res.json();
+  } catch (e) {
+    const msg = e && e.name === 'AbortError'
+      ? 'Request timed out (server slow or not responding)'
+      : (e && e.message) || 'Network error';
+    return { data: null, error: { message: msg } };
+  } finally {
+    clearTimeout(timer);
   }
-  return res.json();
 }
 
 // ---------------------------------------------------------------- query builder
