@@ -5,6 +5,7 @@ import { db } from '../database';
 import { Settings as SettingsIcon, Lock, ShieldCheck, Key, AlertCircle, Loader2, FileText, Database, History, Globe, RefreshCw, Download, Cloud, User, Monitor, Server, Activity, ShoppingCart, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import packageJson from '../../package.json';
+import { EULA_CONTENT, EULA_DOC_ID } from '../data/eula';
 
 const Settings = () => {
     const { user } = useSelector(state => state.auth);
@@ -392,7 +393,7 @@ const Settings = () => {
                                 <div style={{ background: 'white', padding: '15px 25px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <FileText size={18} color='#64748b' />
-                                        <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#475569' }}>EULA DOCUMENT: AINF-EULA-MED-POS-2026-001</span>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#475569' }}>EULA DOCUMENT: {EULA_DOC_ID}</span>
                                     </div>
                                     <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#FF8A1E', background: '#FFF7E6', padding: '4px 10px', borderRadius: '20px' }}>v1.0.0 STABLE</span>
                                 </div>
@@ -428,74 +429,7 @@ const Settings = () => {
 
 export default Settings;
 
-const EULA_CONTENT = `════════════════════════════════════════════════════════════════════════
-END-USER SOFTWARE LICENSE AGREEMENT (EULA)
-TEHZEEB SWEETS & SUPER STORE — POINT OF SALE
-════════════════════════════════════════════════════════════════════════
 
-Version        : 1.0.0 Stable
-Effective Date : 2026
-Jurisdiction   : Islamic Republic of Pakistan
-
-Please read this Agreement carefully before installing or using the
-Software. By installing or using the Software, you ("the Licensee")
-agree to be bound by the terms below. If you do not agree, do not
-install or use the Software.
-
-
-1. LICENSE GRANT
-   The Licensee is granted a non-exclusive, non-transferable license to
-   install and use this Point of Sale software for operating a single
-   retail store (Tehzeeb Sweets & Super Store or the business it is
-   installed for). The Software runs locally on the Licensee's own
-   computer and database.
-
-2. PERMITTED USE
-   (a) Recording sales, invoices and receipts.
-   (b) Managing inventory, stock, suppliers and customers.
-   (c) Recording expenses, credit (khata) and daily reports.
-   (d) Any normal retail / general-store business operation.
-
-3. RESTRICTIONS
-   The Licensee shall not:
-   (a) Resell, rent, sub-license or distribute the Software to others.
-   (b) Reverse-engineer, decompile or attempt to extract the source
-       code, except as permitted by law.
-   (c) Remove or alter any ownership or copyright notices.
-
-4. DATA & PRIVACY
-   All business data (sales, inventory, customers, etc.) is stored
-   locally on the Licensee's own machine. The Software does not send
-   business data to any external server. The Licensee is solely
-   responsible for backing up its own data and for the accuracy of the
-   records it enters.
-
-5. NO WARRANTY
-   The Software is provided "AS IS" without warranty of any kind. The
-   developer does not warrant that the Software will be error-free or
-   uninterrupted. The Licensee uses the Software at its own risk.
-
-6. LIMITATION OF LIABILITY
-   To the maximum extent permitted by law, the developer shall not be
-   liable for any loss of data, loss of profit, or any indirect or
-   consequential damages arising from the use of the Software.
-
-7. TERMINATION
-   This license remains in effect until terminated. It terminates
-   automatically if the Licensee breaches any term of this Agreement.
-
-8. GOVERNING LAW
-   This Agreement is governed by the laws of the Islamic Republic of
-   Pakistan.
-
-
-By using this Software you acknowledge that you have read, understood
-and agreed to this Agreement.
-
-────────────────────────────────────────────────────────────────────────
-TEHZEEB SWEETS & SUPER STORE — POINT OF SALE
-© 2026 | ALL RIGHTS RESERVED
-════════════════════════════════════════════════════════════════════════`;
 
 
 
