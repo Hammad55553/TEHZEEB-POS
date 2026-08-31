@@ -889,7 +889,7 @@ const OrderManagement = () => {
                                         <img src={logo} alt="Tehzeeb Sweets & Super Store" style={{ height: '70px', objectFit: 'contain' }} />
                                         <div>
                                             <h1 style={{ fontSize: '1.8rem', fontWeight: 950, letterSpacing: '-1px', color: '#1e293b', margin: 0 }}>TEHZEEB SWEETS & SUPER STORE</h1>
-                                            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', margin: '4px 0 0 0' }}>Main Bazaar, Hasilpur | 0305-6699899</p>
+                                            <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', margin: '4px 0 0 0' }}>Purana Hasilpur, Hasilpur | +92 302 4013030</p>
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>

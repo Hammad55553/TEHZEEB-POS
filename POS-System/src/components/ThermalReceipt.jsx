@@ -18,8 +18,8 @@ const ThermalReceipt = ({ lastSale, activeShift, logo }) => {
             <div style={{ textAlign: 'center', marginBottom: '10px' }}>
                 <img src={logo} alt="" style={{ height: '40px', marginBottom: '5px', filter: 'grayscale(1)' }} />
                 <h1 style={{ margin: '0 0 2px 0', fontSize: '18px', fontWeight: '900', textTransform: 'uppercase' }}>TEHZEEB SWEETS & SUPER STORE</h1>
-                <p style={{ margin: 0, fontSize: '10px', fontWeight: 700 }}>Main Bazaar, Hasilpur</p>
-                <p style={{ margin: 0, fontSize: '10px', fontWeight: 600 }}>Ph: 0305-6699899</p>
+                <p style={{ margin: 0, fontSize: '10px', fontWeight: 700 }}>Purana Hasilpur, Hasilpur</p>
+                <p style={{ margin: 0, fontSize: '10px', fontWeight: 600 }}>Ph: +92 302 4013030</p>
             </div>
 
             <div style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '5px 0', textAlign: 'left', marginBottom: '10px' }}>
