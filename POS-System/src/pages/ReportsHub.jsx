@@ -60,6 +60,13 @@ function firstOfMonth() {
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
+function firstOfWeek() {
+  const d = new Date();
+  const day = d.getDay();               // 0=Sun
+  const diff = (day === 0 ? 6 : day - 1); // week starts Monday
+  d.setDate(d.getDate() - diff);
+  return d.toISOString().slice(0, 10);
+}
 function firstOfYear() {
   const d = new Date();
   return new Date(d.getFullYear(), 0, 1).toISOString().slice(0, 10);
@@ -291,16 +298,25 @@ function ReportsHub() {
     async function load() {
       setLoading(true);
       try {
+        // DATE-RANGE FILTERED: load only the selected range's data so the server
+        // stays light and reports open in ~1 sec (no full-history load, no 4GB).
+        const startISO = `${from}T00:00:00.000Z`;
+        const endISO = `${to}T23:59:59.999Z`;
         const results = await Promise.allSettled([
-          // Reports use recent data. Pull the latest N rows instead of the whole
-          // history so the backend never loads thousands of sales + lakhs of
-          // sale_items into memory at once (that spiked server RAM to ~4GB).
-          db.from('sales').select('*, sale_items(*)').is('deleted_at', null).order('id', { ascending: false }).limit(2000),
-          db.from('inventory').select('*'),
-          db.from('stock_moves').select('*').order('id', { ascending: false }).limit(3000),
-          db.from('orders').select('*').order('id', { ascending: false }).limit(2000),
+          db.from('sales').select('*, sale_items(*)').is('deleted_at', null)
+            .gte('created_at', startISO).lte('created_at', endISO)
+            .order('id', { ascending: false }).limit(5000),
+          db.from('inventory').select('*'),  // stock reports need current stock (all)
+          db.from('stock_moves').select('*')
+            .gte('created_at', startISO).lte('created_at', endISO)
+            .order('id', { ascending: false }).limit(5000),
+          db.from('orders').select('*')
+            .gte('created_at', startISO).lte('created_at', endISO)
+            .order('id', { ascending: false }).limit(5000),
           db.from('customers').select('*'),
-          db.from('expenses').select('*').order('id', { ascending: false }).limit(3000),
+          db.from('expenses').select('*')
+            .gte('created_at', startISO).lte('created_at', endISO)
+            .order('id', { ascending: false }).limit(5000),
         ]);
         if (!mounted) return;
 
@@ -328,8 +344,9 @@ function ReportsHub() {
     }
     load();
     return () => { mounted = false; clearTimeout(failsafe); };
+    // reload whenever the selected date range changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [from, to]);
 
   // ---- derived data per report ----
   const salesInRange = useMemo(
@@ -1069,6 +1086,7 @@ function ReportsHub() {
             </div>
             <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
               {quickBtn('Today', () => { setFrom(today()); setTo(today()); })}
+              {quickBtn('This Week', () => { setFrom(firstOfWeek()); setTo(today()); })}
               {quickBtn('This Month', () => { setFrom(firstOfMonth()); setTo(today()); })}
               {quickBtn('This Year', () => { setFrom(firstOfYear()); setTo(today()); })}
             </div>
