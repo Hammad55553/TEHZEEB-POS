@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { db } from '../database';
 import Pagination from '../components/Pagination';
 import { 
     Database, 
@@ -19,7 +20,22 @@ import {
 
 const StockRecords = () => {
     const inventory = useSelector(state => state.inventory.items);
-    const sales = useSelector(state => state.sales.history || []);
+    const reduxSales = useSelector(state => state.sales.history || []);
+    const [sales, setSales] = useState(reduxSales);
+
+    // Load recent sales WITH their line items so per-product daily sales works
+    // (Redux history often lacks embedded sale_items). Falls back to Redux.
+    useEffect(() => {
+        let alive = true;
+        (async () => {
+            try {
+                const { data } = await db.from('sales').select('*, sale_items(*)')
+                    .is('deleted_at', null).order('id', { ascending: false }).limit(3000);
+                if (alive && data && data.length) setSales(data);
+            } catch (e) { /* keep redux fallback */ }
+        })();
+        return () => { alive = false; };
+    }, []);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -57,18 +73,18 @@ const StockRecords = () => {
 
         filteredSales.forEach(sale => {
             const date = new Date(sale.created_at).toLocaleDateString();
-            if (sale.sale_items) {
-                sale.sale_items.forEach(item => {
-                    if (!stats[item.product_id]) {
-                        stats[item.product_id] = { dailySales: {}, totalSold: 0 };
-                    }
-                    if (!stats[item.product_id].dailySales[date]) {
-                        stats[item.product_id].dailySales[date] = 0;
-                    }
-                    stats[item.product_id].dailySales[date] += item.quantity;
-                    stats[item.product_id].totalSold += item.quantity;
-                });
-            }
+            const lineItems = sale.sale_items || sale.items || [];
+            lineItems.forEach(item => {
+                // sale_items are stored with qty + product_id (older/other code may
+                // use quantity / inventory_id) — accept all so counts always show.
+                const pid = item.product_id ?? item.inventory_id ?? item.id;
+                const q = Number(item.qty ?? item.quantity ?? 0) || 0;
+                if (pid == null) return;
+                if (!stats[pid]) stats[pid] = { dailySales: {}, totalSold: 0 };
+                if (!stats[pid].dailySales[date]) stats[pid].dailySales[date] = 0;
+                stats[pid].dailySales[date] += q;
+                stats[pid].totalSold += q;
+            });
         });
         
         return stats;

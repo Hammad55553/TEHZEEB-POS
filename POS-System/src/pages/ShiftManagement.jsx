@@ -32,6 +32,7 @@ const ShiftManagement = () => {
     const [openingCash, setOpeningCash] = useState('');
     const [closingCash, setClosingCash] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [detailShift, setDetailShift] = useState(null);
 
     const handleStart = async (e) => {
         e.preventDefault();
@@ -309,7 +310,7 @@ const ShiftManagement = () => {
                             <div style={{ flex: 1, overflowY: 'auto', padding: '15px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {filteredHistory.map(s => (
-                                        <div key={s.id} style={{ padding: '15px', borderRadius: '16px', border: '1px solid #f1f5f9', background: '#fff', transition: 'all 0.2s', position: 'relative' }}>
+                                        <div key={s.id} onClick={() => setDetailShift(s)} style={{ padding: '15px', borderRadius: '16px', border: '1px solid #f1f5f9', background: '#fff', transition: 'all 0.2s', position: 'relative', cursor: 'pointer' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                     <div style={{ width: '32px', height: '32px', background: '#f8fafc', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 900, color: '#6366f1', border: '1px solid #e2e8f0' }}>
@@ -334,7 +335,7 @@ const ShiftManagement = () => {
                                                 </div>
                                                 {isAdmin && (
                                                     <button 
-                                                        onClick={() => handleDeleteShift(s.id)}
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteShift(s.id); }}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#f87171' }}
                                                     >
                                                         <Trash2 size={14} />
@@ -355,6 +356,53 @@ const ShiftManagement = () => {
                     </div>
                 </div>
             </div>
+
+            {/* SHIFT DETAIL MODAL */}
+            {detailShift && (() => {
+                const sh = detailShift;
+                const opening = Number(sh.opening_cash || sh.openingCash || 0);
+                const sales = Number(sh.sales || sh.total_sales || 0);
+                const expenses = Number(sh.expenses || 0);
+                const closing = (sh.closing_cash != null ? Number(sh.closing_cash) : null);
+                const expected = opening + sales - expenses;      // cash that should be in drawer
+                const diff = closing != null ? (closing - expected) : null; // over/short
+                const money = (n) => 'Rs ' + Number(n || 0).toLocaleString();
+                const row = (label, val, color) => (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', borderBottom: '1px solid #f1f5f9' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748b' }}>{label}</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 900, color: color || '#1e293b' }}>{val}</span>
+                    </div>
+                );
+                return (
+                    <div onClick={() => setDetailShift(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+                        <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', width: '100%', maxWidth: 460, borderRadius: 20, overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.3)' }}>
+                            <div style={{ background: 'linear-gradient(135deg,#FF8A1E,#F7941D)', color: '#fff', padding: '20px 24px' }}>
+                                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 950 }}>Shift Details</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', opacity: 0.95, fontWeight: 700 }}>
+                                    {sh.staff_name || 'System User'} · {new Date(sh.start_time || sh.opened_at || sh.startTime).toLocaleString()}
+                                </p>
+                            </div>
+                            <div style={{ padding: '20px 24px' }}>
+                                {row('Opening Cash', money(opening), '#F7941D')}
+                                {row('Total Sales', money(sales), '#16a34a')}
+                                {row('Expenses', money(expenses), '#dc2626')}
+                                {row('Expected in Drawer', money(expected), '#1e293b')}
+                                {closing != null && row('Counted (Closing) Cash', money(closing), '#1e293b')}
+                                {diff != null && row(diff === 0 ? 'Difference (Balanced)' : (diff > 0 ? 'Difference (Over)' : 'Difference (Short)'), money(diff), diff === 0 ? '#16a34a' : (diff > 0 ? '#2563eb' : '#dc2626'))}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0', marginTop: 4 }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8' }}>Status</span>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 900, color: sh.status === 'closed' ? '#64748b' : '#16a34a', textTransform: 'uppercase' }}>{sh.status || 'open'}</span>
+                                </div>
+                                <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 8 }}>
+                                    Opened: {new Date(sh.start_time || sh.opened_at || sh.startTime).toLocaleString()}<br/>
+                                    {(sh.end_time || sh.closed_at) ? 'Closed: ' + new Date(sh.end_time || sh.closed_at).toLocaleString() : 'Not closed yet'}
+                                </div>
+                                <button onClick={() => setDetailShift(null)} style={{ marginTop: 16, width: '100%', padding: '12px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 800, cursor: 'pointer' }}>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             <style>{`
                 @keyframes pulse {
