@@ -550,7 +550,7 @@ function OrderForm({ type, customers, suppliers, inventory, user, onSaved, isSma
 function AllOrders({ orders, loading, onRefresh, isSmall }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('pending');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [busyId, setBusyId] = useState(null);
 
   const filtered = useMemo(() => {
