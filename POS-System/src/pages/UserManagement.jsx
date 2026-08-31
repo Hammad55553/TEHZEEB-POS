@@ -50,7 +50,9 @@ const UserManagement = () => {
 
     const fetchActivity = async () => {
         try {
-            const { data } = await db.from('sales').select('*');
+            // Only need seller name to count sales per user — fetch just that
+            // column and cap the rows so the server isn't loaded with all sales.
+            const { data } = await db.from('sales').select('seller_name,cashier').order('id', { ascending: false }).limit(3000);
             const counts = {};
             (data || []).forEach(s => {
                 const key = (s.seller_name || s.cashier || '').toLowerCase();
