@@ -118,6 +118,7 @@ function OrdersHub() {
   const invRedux = useSelector(s => s.inventory?.items || []);
   const custRedux = useSelector(s => s.customers?.list || []);
   const suppRedux = useSelector(s => s.suppliers?.list || []);
+  const ordersRedux = useSelector(s => s.orders?.list || []);
   const user = useSelector(s => s.auth?.user);
 
   const [invFetched, setInvFetched] = useState([]);
@@ -138,13 +139,21 @@ function OrdersHub() {
   }, []);
 
   const fetchOrders = async () => {
-    setLoading(true);
+    // INSTANT: if orders are already in Redux, show them right away (no wait).
+    if (ordersRedux && ordersRedux.length) {
+      const active = ordersRedux.filter(o => !o.deleted_at);
+      setOrders(active);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+    // Then refresh from the DB in the background so the list stays current.
     try {
-      const { data, error } = await db.from('orders').select('*').is('deleted_at', null).order('id', { ascending: false });
+      const { data, error } = await db.from('orders').select('*').is('deleted_at', null).order('id', { ascending: false }).limit(2000);
       if (error) throw error;
-      setOrders(data || []);
+      if (data) setOrders(data);
     } catch (e) {
-      toast.error('Could not load orders');
+      if (!(ordersRedux && ordersRedux.length)) toast.error('Could not load orders');
     } finally {
       setLoading(false);
     }
