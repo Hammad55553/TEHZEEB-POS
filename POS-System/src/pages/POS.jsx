@@ -286,22 +286,6 @@ const POS = () => {
         }
     };
 
-    // GHOST AUTOCOMPLETE LOGIC
-    useEffect(() => {
-        if (searchTerm && searchTerm.length >= 2) {
-            const match = inventory.find(i =>
-                i.name?.toLowerCase().startsWith(searchTerm.toLowerCase())
-            );
-            if (match) {
-                setSuggestion(match.name);
-            } else {
-                setSuggestion('');
-            }
-        } else {
-            setSuggestion('');
-        }
-    }, [searchTerm, inventory]);
-
     const filteredInventory = useMemo(() => {
         const q = (searchTerm || '').toLowerCase().trim();
         // Performance: with thousands of products, don't render the whole catalog
@@ -326,6 +310,18 @@ const POS = () => {
         }
         return out;
     }, [searchTerm, selectedCategory, inventory]);
+
+    // GHOST AUTOCOMPLETE — reuse the already-filtered results (no extra full scan).
+    useEffect(() => {
+        if (searchTerm && searchTerm.length >= 2) {
+            const q = searchTerm.toLowerCase();
+            const match = filteredInventory.find(i => i.name?.toLowerCase().startsWith(q));
+            setSuggestion(match ? match.name : '');
+        } else {
+            setSuggestion('');
+        }
+    }, [searchTerm, filteredInventory]);
+
 
     const addToCart = (product) => {
         const inventoryItem = inventory.find(i => i.id === product.id);
