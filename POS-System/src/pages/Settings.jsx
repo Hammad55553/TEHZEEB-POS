@@ -9,6 +9,7 @@ import { EULA_CONTENT, EULA_DOC_ID } from '../data/eula';
 
 const Settings = () => {
     const { user } = useSelector(state => state.auth);
+    const { history: allSales } = useSelector(state => state.sales);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -366,9 +367,24 @@ const Settings = () => {
                                 <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}><History size={20} color="#ea580c" /> System Activity Log</h3>
                                 <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Review critical administrative actions and system events.</p>
                             </div>
-                            <div style={{ textAlign: 'center', padding: '50px 20px', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
-                                <AlertCircle size={32} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
-                                <p style={{ fontWeight: 800, color: '#475569', fontSize: '0.9rem' }}>No recent critical events logged.</p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {(allSales || []).slice(0, 10).map(sale => (
+                                    <div key={sale.id} style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: 900, color: '#0f172a' }}>Invoice {sale.status === 'Returned' ? 'Returned' : 'Generated'} #{sale.invoice_no ? (100000 + parseInt(sale.invoice_no)) : (sale.id?.toString().slice(-6).toUpperCase())}</span>
+                                            <p style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600 }}>By {sale.cashier_name || 'Admin'} - {new Date(sale.created_at).toLocaleString()}</p>
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 900, color: sale.status === 'Returned' ? '#ef4444' : '#16a34a' }}>
+                                            {sale.status === 'Returned' ? '-' : '+'} Rs {sale.total?.toLocaleString()}
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!allSales || allSales.length === 0) && (
+                                    <div style={{ textAlign: 'center', padding: '50px 20px', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+                                        <AlertCircle size={32} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
+                                        <p style={{ fontWeight: 800, color: '#475569', fontSize: '0.9rem' }}>No recent critical events logged.</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ) : activeTab === 'docs' ? (

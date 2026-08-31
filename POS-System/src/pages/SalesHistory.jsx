@@ -127,6 +127,69 @@ const SalesHistory = ({ isReturnsPage = false }) => {
         toast.success(`Exported ${filteredSales.length} records`);
     };
 
+    const STORE_NAME = 'TEHZEEB SWEETS & SUPER STORE';
+
+    const printSale = (sale) => {
+        if (!sale) return;
+        const items = sale.sale_items || [];
+        const rows = items.map((it) => {
+            const nm = it?.product_name || it?.name || 'Item';
+            const qty = it?.qty ?? it?.quantity ?? 0;
+            const price = it?.price ?? it?.unit_price ?? 0;
+            const line = (Number(qty) || 0) * (Number(price) || 0);
+            return `<tr><td>${nm}</td><td style="text-align:center">${(qty || 0)}</td><td style="text-align:right">${(price || 0)}</td><td style="text-align:right">${(line || 0).toLocaleString()}</td></tr>`;
+        }).join('');
+        const dateStr = sale.created_at ? new Date(sale.created_at).toLocaleString() : '';
+        const subtotal = sale.subtotal ?? sale.total ?? 0;
+        const discount = sale.discount ?? 0;
+        const tax = sale.tax ?? 0;
+        const total = sale.total ?? 0;
+        const invoiceNo = sale.invoice_no ? (100000 + parseInt(sale.invoice_no)) : (sale.id?.toString().slice(-6).toUpperCase() || '');
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Invoice ${invoiceNo}</title>
+            <style>
+                *{font-family:'Courier New',monospace;}
+                body{width:280px;margin:0 auto;padding:10px;color:#000;}
+                h2{text-align:center;margin:4px 0;font-size:16px;}
+                .meta{font-size:11px;text-align:center;margin-bottom:8px;}
+                table{width:100%;border-collapse:collapse;font-size:12px;}
+                th,td{padding:2px 0;}
+                thead th{border-bottom:1px dashed #000;text-align:left;}
+                .tot td{padding-top:4px;}
+                .line{border-top:1px dashed #000;}
+                .foot{text-align:center;font-size:11px;margin-top:10px;}
+            </style></head><body>
+            <h2>${STORE_NAME}</h2>
+            <div class="meta">Invoice #${invoiceNo}<br/>${dateStr}<br/>Customer: ${sale.customer_name || 'Walk-in'}</div>
+            <table>
+                <thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amt</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <table class="line"><tbody>
+                <tr class="tot"><td>Subtotal</td><td colspan="3" style="text-align:right">${(subtotal || 0).toLocaleString()}</td></tr>
+                <tr><td>Discount</td><td colspan="3" style="text-align:right">${(discount || 0).toLocaleString()}</td></tr>
+                <tr><td>Tax</td><td colspan="3" style="text-align:right">${(tax || 0).toLocaleString()}</td></tr>
+                <tr class="tot"><td><b>TOTAL</b></td><td colspan="3" style="text-align:right"><b>Rs ${(total || 0).toLocaleString()}</b></td></tr>
+                <tr><td>Payment</td><td colspan="3" style="text-align:right">${sale.payment_method || 'Cash'}</td></tr>
+            </tbody></table>
+            <div class="foot">
+                Shukriya! Dobara tashreef laayein.<br/>
+                *** ${STORE_NAME} ***<br/>
+                <div style="margin: 4px 0; font-size: 9px; font-weight: 600; text-align: left;">
+                    Check order & cash before leaving.<br/>
+                    * Not valid for court challenge.<br/>
+                    * No return/exchange without original bill.
+                </div>
+                <span style="font-size: 8px; color: #555; display: inline-block; margin-top: 10px;">Software developed by <b>asperinfotech.com</b></span>
+            </div>
+            <script>window.onload=function(){window.print();};</script>
+            </body></html>`;
+        const w = window.open('', '_blank', 'width=350,height=600');
+        if (!w) { toast.error('Popup blocked — please allow popups'); return; }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+    };
+
     const handleReturn = async (sale) => {
         if (sale.status === 'Returned') return;
         if (window.confirm('Authorize Full Return? Stock, shift totals and customer credit will all be reversed.')) {
@@ -301,9 +364,9 @@ const SalesHistory = ({ isReturnsPage = false }) => {
                                                 fontWeight: 900, 
                                                 padding: '4px 10px', 
                                                 borderRadius: '20px',
-                                                background: sale.status === 'Returned' ? '#fff1f1' : '#FFF7E6',
-                                                color: sale.status === 'Returned' ? '#ef4444' : '#F7941D',
-                                                border: `1px solid ${sale.status === 'Returned' ? '#fecaca' : '#FFEFD0'}`
+                                                background: sale.status === 'Returned' ? '#fff1f1' : (sale.status?.toLowerCase() === 'paid' ? '#f0fdf4' : '#FFF7E6'),
+                                                color: sale.status === 'Returned' ? '#ef4444' : (sale.status?.toLowerCase() === 'paid' ? '#16a34a' : '#F7941D'),
+                                                border: `1px solid ${sale.status === 'Returned' ? '#fecaca' : (sale.status?.toLowerCase() === 'paid' ? '#bbf7d0' : '#FFEFD0')}`
                                             }}>
                                                 {sale.status.toUpperCase()}
                                             </span>
@@ -340,8 +403,8 @@ const SalesHistory = ({ isReturnsPage = false }) => {
                                             fontWeight: 900, 
                                             padding: '3px 10px', 
                                             borderRadius: '20px',
-                                            background: sale.status === 'Returned' ? '#fff1f1' : '#FFF7E6',
-                                            color: sale.status === 'Returned' ? '#ef4444' : '#F7941D'
+                                            background: sale.status === 'Returned' ? '#fff1f1' : (sale.status?.toLowerCase() === 'paid' ? '#f0fdf4' : '#FFF7E6'),
+                                            color: sale.status === 'Returned' ? '#ef4444' : (sale.status?.toLowerCase() === 'paid' ? '#16a34a' : '#F7941D')
                                         }}>
                                             {sale.status.toUpperCase()}
                                         </span>
@@ -453,17 +516,22 @@ const SalesHistory = ({ isReturnsPage = false }) => {
                                 <p style={{ fontSize: '0.7rem', fontWeight: 900, color: '#64748b', marginBottom: '12px', letterSpacing: '0.5px' }}>ITEMIZED BREAKDOWN</p>
                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {selectedSale.sale_items && selectedSale.sale_items.length > 0 ? (
-                                        selectedSale.sale_items.map(item => (
+                                        selectedSale.sale_items.map(item => {
+                                            const qty = item.qty || item.quantity || 0;
+                                            const price = item.price || item.unit_price || 0;
+                                            const name = item.name || item.product_name || 'Unknown Item';
+                                            return (
                                             <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px dashed #f1f5f9' }}>
                                                 <div style={{ flex: 1 }}>
-                                                    <p style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b' }}>{item.product_name || item.name}</p>
-                                                    <p style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 700 }}>Qty: {item.quantity} @ Rs {item.price?.toLocaleString()}</p>
+                                                    <p style={{ fontSize: '0.85rem', fontWeight: 800, color: '#1e293b' }}>{name}</p>
+                                                    <p style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 700 }}>Qty: {qty} @ Rs {price.toLocaleString()}</p>
                                                 </div>
                                                 <div style={{ fontSize: '0.9rem', fontWeight: 950, color: '#0f172a' }}>
-                                                    Rs {((item.price || 0) * (item.quantity || 0)).toLocaleString()}
+                                                    Rs {(price * qty).toLocaleString()}
                                                 </div>
                                             </div>
-                                        ))
+                                            );
+                                        })
                                     ) : (
                                         <div style={{ padding: '15px', background: '#f8fafc', borderRadius: '10px', border: '1px dashed #e2e8f0' }}>
                                             <p style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569' }}>{selectedSale.product_name || 'No item details available'}</p>
@@ -482,7 +550,7 @@ const SalesHistory = ({ isReturnsPage = false }) => {
                         </div>
 
                         <div style={{ padding: '20px', borderTop: '1px solid #f1f5f9', background: '#ffffff', display: 'flex', gap: '10px' }}>
-                            <button className="btn-erp" style={{ flex: 1, padding: '14px', borderRadius: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 900, fontSize: '0.8rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={() => printSale(selectedSale)} className="btn-erp" style={{ flex: 1, padding: '14px', borderRadius: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 900, fontSize: '0.8rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
                                 <Printer size={18} /> PRINT
                             </button>
                             {isReturnsPage && isAdmin && (

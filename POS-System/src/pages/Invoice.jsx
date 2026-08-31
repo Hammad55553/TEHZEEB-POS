@@ -80,12 +80,16 @@ function Invoice() {
       let rows = [];
 
       if (isNumeric) {
-        // 1) exact invoice id match
+        const qNum = Number(q);
+        const possibleInvoiceNo = qNum > 100000 ? qNum - 100000 : qNum;
+
+        // 1) exact invoice id or invoice_no match
         const exact = await db
           .from('sales')
           .select('*, sale_items(*)')
-          .eq('id', Number(q))
+          .or(`id.eq.${qNum},invoice_no.eq.${possibleInvoiceNo}`)
           .is('deleted_at', null)
+          .order('created_at', { ascending: false })
           .limit(5);
         if (exact.error) throw exact.error;
         rows = exact.data || [];
@@ -155,7 +159,7 @@ function Invoice() {
         .foot{text-align:center;font-size:11px;margin-top:10px;}
       </style></head><body>
       <h2>${STORE_NAME}</h2>
-      <div class="meta">Invoice #${sale.id || ''}<br/>${dateStr}<br/>Customer: ${sale.customer_name || 'Walk-in'}</div>
+      <div class="meta">Invoice #${sale.invoice_no ? (100000 + parseInt(sale.invoice_no)) : (sale.id?.toString().slice(-6).toUpperCase() || '')}<br/>${dateStr}<br/>Customer: ${sale.customer_name || 'Walk-in'}</div>
       <table>
         <thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Amt</th></tr></thead>
         <tbody>${rows}</tbody>
@@ -381,7 +385,7 @@ function Invoice() {
                 display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap',
               }}
             >
-              <span style={{ fontWeight: 700, color: C.maroon }}>#{s.id} — {s.customer_name || 'Walk-in'}</span>
+              <span style={{ fontWeight: 700, color: C.maroon }}>#{s.invoice_no ? (100000 + parseInt(s.invoice_no)) : s.id?.toString().slice(-6).toUpperCase()} — {s.customer_name || 'Walk-in'}</span>
               <span style={{ color: C.muted, fontSize: 13 }}>
                 {s.created_at ? new Date(s.created_at).toLocaleDateString() : ''} · Rs {(s.total || 0).toLocaleString()}
               </span>
@@ -394,7 +398,7 @@ function Invoice() {
         <div style={{ border: `1.5px solid ${C.helpBorder}`, borderRadius: 12, padding: 16, background: C.cream2 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <div style={{ fontWeight: 800, color: C.maroon, fontSize: 17 }}>
-              Invoice #{selectedSale.id}
+              Invoice #{selectedSale.invoice_no ? (100000 + parseInt(selectedSale.invoice_no)) : selectedSale.id?.toString().slice(-6).toUpperCase()}
             </div>
             <button
               onClick={() => setSelectedSale(null)}

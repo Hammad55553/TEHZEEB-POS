@@ -74,24 +74,39 @@ const ProfitMastery = () => {
     const totalRevenue = React.useMemo(() => filteredSales.reduce((acc, s) => acc + (Number(s.total) || 0), 0), [filteredSales]);
     
     // Detailed Profit Calculation
-    const { productProfitStats, totalNetProfit, totalCost } = React.useMemo(() => {
+    const { productProfitStats, totalNetProfit, totalCost, totalCredit, totalCash } = React.useMemo(() => {
         const stats = {};
         let netProfit = 0;
         let cost = 0;
+        let creditAmount = 0;
+        let cashAmount = 0;
 
         filteredSales.forEach(sale => {
             let saleProfit = 0;
             const items = sale.sale_items || sale.items || [];
+            
+            // Financial Audit 
+            const paymentMethod = (sale.payment_method || '').toLowerCase();
+            if (paymentMethod === 'credit' || paymentMethod === 'khatta') {
+                creditAmount += Number(sale.total) || 0;
+            } else {
+                cashAmount += Number(sale.total) || 0;
+            }
+
             items.forEach(item => {
-                const buyPrice = item.buy_price || item.buyPrice || 0;
-                const profitPerUnit = (item.price || 0) - buyPrice;
-                const itemTotalProfit = profitPerUnit * (item.quantity || 0);
+                const buyPrice = Number(item.buy_price || item.buyPrice || 0);
+                const salePrice = Number(item.price || 0);
+                const qty = Number(item.qty || item.quantity || 0);
+                
+                const profitPerUnit = salePrice - buyPrice;
+                const itemTotalProfit = profitPerUnit * qty;
                 
                 saleProfit += itemTotalProfit;
-                cost += (buyPrice * (item.quantity || 0));
+                cost += (buyPrice * qty);
 
                 const invItem = inventory.find(i => i.id === item.product_id);
                 const pName = item.product_name || item.name || invItem?.name || 'Unknown Item';
+                const pUnit = item.unit || invItem?.unit || 'pcs';
 
                 if (!stats[pName]) {
                     stats[pName] = {
@@ -99,27 +114,34 @@ const ProfitMastery = () => {
                         profit: 0,
                         qty: 0,
                         buyPrice: buyPrice,
-                        salePrice: item.price,
+                        salePrice: salePrice,
+                        unit: pUnit,
                         category: item.category || invItem?.category || 'General',
                         sales: []
                     };
                 }
                 stats[pName].profit += itemTotalProfit;
-                stats[pName].qty += (item.quantity || 0);
+                stats[pName].qty += qty;
                 stats[pName].sales.push({
-                    billId: sale.id?.toString().slice(-6) || 'N/A',
-                    qty: item.quantity,
+                    billId: sale.invoice_no ? (100000 + parseInt(sale.invoice_no)).toString() : sale.id?.toString().slice(-6).toUpperCase() || 'N/A',
+                    qty: qty,
+                    unit: pUnit,
+                    unitPrice: salePrice,
                     customer: sale.customer_name || sale.customerName || 'Walk-in',
-                    total: (item.price * item.quantity)
+                    operator: sale.cashier_name || 'Admin',
+                    status: sale.status || 'Paid',
+                    total: (salePrice * qty)
                 });
             });
-            netProfit += (saleProfit - (sale.discount || 0));
+            netProfit += (saleProfit - Number(sale.discount || 0));
         });
 
         return { 
             productProfitStats: stats, 
             totalNetProfit: netProfit, 
-            totalCost: cost 
+            totalCost: cost,
+            totalCredit: creditAmount,
+            totalCash: cashAmount
         };
     }, [filteredSales, inventory]);
 
@@ -135,7 +157,7 @@ const ProfitMastery = () => {
             {/* PRODUCT DETAIL MODAL */}
             {selectedProduct && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: window.innerWidth <= 480 ? '0' : '20px', backdropFilter: 'blur(5px)' }}>
-                    <div style={{ background: 'white', width: '100%', maxWidth: '600px', height: window.innerWidth <= 480 ? '100%' : 'auto', borderRadius: window.innerWidth <= 480 ? '0' : '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ background: 'white', width: '100%', maxWidth: '800px', height: window.innerWidth <= 480 ? '100%' : 'auto', borderRadius: window.innerWidth <= 480 ? '0' : '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ background: '#0f172a', padding: '25px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                                 <h3 style={{ fontSize: '1.4rem', fontWeight: 900 }}>{selectedProduct.name}</h3>
@@ -177,7 +199,7 @@ const ProfitMastery = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 480 ? '1fr' : 'repeat(3, 1fr)', gap: '15px', marginBottom: '25px' }}>
                                 <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                                     <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b', display: 'block' }}>TOTAL SOLD</span>
-                                    <span style={{ fontSize: '1.2rem', fontWeight: 950 }}>{selectedProduct.qty} Units</span>
+                                    <span style={{ fontSize: '1.2rem', fontWeight: 950 }}>{selectedProduct.qty} {selectedProduct.unit}</span>
                                 </div>
                                 <div style={{ background: '#FFF7E6', padding: '15px', borderRadius: '12px', border: '1px solid #FF8A1E' }}>
                                     <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#F7941D', display: 'block' }}>TOTAL PROFIT</span>
@@ -185,7 +207,7 @@ const ProfitMastery = () => {
                                 </div>
                                 <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '12px', border: '1px solid #0ea5e9' }}>
                                     <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#0ea5e9', display: 'block' }}>PROFIT / UNIT</span>
-                                    <span style={{ fontSize: '1.2rem', fontWeight: 950, color: '#0c4a6e' }}>Rs {selectedProduct.salePrice - selectedProduct.buyPrice}</span>
+                                    <span style={{ fontSize: '1.2rem', fontWeight: 950, color: '#0c4a6e' }}>Rs {Number((selectedProduct.salePrice || 0) - (selectedProduct.buyPrice || 0)).toLocaleString()}</span>
                                 </div>
                             </div>
 
@@ -198,8 +220,12 @@ const ProfitMastery = () => {
                                         <tr>
                                             <th style={{ fontSize: '0.7rem' }}>BILL ID</th>
                                             <th style={{ fontSize: '0.7rem' }}>CLIENT</th>
+                                            <th style={{ fontSize: '0.7rem' }}>OPERATOR</th>
+                                            <th style={{ fontSize: '0.7rem', textAlign: 'center' }}>STATUS</th>
                                             <th style={{ fontSize: '0.7rem', textAlign: 'right' }}>QTY</th>
-                                            <th style={{ fontSize: '0.7rem', textAlign: 'right' }}>TOTAL</th>
+                                            <th style={{ fontSize: '0.7rem', textAlign: 'center' }}>UNIT</th>
+                                            <th style={{ fontSize: '0.7rem', textAlign: 'right' }}>PRICE</th>
+                                            <th style={{ fontSize: '0.7rem', textAlign: 'right' }}>NET VALUE</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -207,8 +233,16 @@ const ProfitMastery = () => {
                                             <tr key={i}>
                                                 <td style={{ fontWeight: 800, fontSize: '0.75rem' }}>#{s.billId}</td>
                                                 <td style={{ fontSize: '0.75rem' }}>{s.customer}</td>
+                                                <td style={{ fontSize: '0.75rem' }}>{s.operator}</td>
+                                                <td style={{ textAlign: 'center', fontSize: '0.7rem', fontWeight: 800, color: s.status === 'Paid' ? '#16a34a' : '#F7941D' }}>
+                                                    <span style={{ background: s.status === 'Paid' ? '#f0fdf4' : '#FFF7E6', padding: '3px 8px', borderRadius: '4px' }}>
+                                                        {s.status.toUpperCase()}
+                                                    </span>
+                                                </td>
                                                 <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.75rem' }}>{s.qty}</td>
-                                                <td style={{ textAlign: 'right', fontWeight: 800, fontSize: '0.75rem' }}>Rs {s.total.toLocaleString()}</td>
+                                                <td style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', fontWeight: 800 }}>{s.unit}</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.75rem' }}>Rs {s.unitPrice?.toLocaleString()}</td>
+                                                <td style={{ textAlign: 'right', fontWeight: 900, fontSize: '0.75rem', color: '#0f172a' }}>Rs {s.total?.toLocaleString()}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -327,6 +361,7 @@ const ProfitMastery = () => {
                                 <tr style={{ background: '#f8fafc' }}>
                                     <th style={{ padding: '20px' }}>PRODUCT NAME</th>
                                     <th style={{ textAlign: 'right' }}>UNITS SOLD</th>
+                                    <th style={{ textAlign: 'center' }}>UNIT TYPE</th>
                                     <th style={{ textAlign: 'right' }}>TOTAL PROFIT</th>
                                     <th style={{ textAlign: 'center' }}>HEALTH</th>
                                 </tr>
@@ -336,6 +371,7 @@ const ProfitMastery = () => {
                                     <tr key={idx} onClick={() => setSelectedProduct(p)} style={{ cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#f1f5f9'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
                                         <td style={{ padding: '18px 20px', fontWeight: 800, whiteSpace: 'nowrap' }}>{p.name}</td>
                                         <td style={{ textAlign: 'right', fontWeight: 700 }}>{p.qty}</td>
+                                        <td style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 800 }}>{p.unit}</td>
                                         <td style={{ textAlign: 'right', fontWeight: 950, color: '#F7941D' }}>Rs {p.profit.toLocaleString()}</td>
                                         <td style={{ textAlign: 'center' }}>
                                             <div style={{ padding: '5px 10px', borderRadius: '6px', background: '#FFF7E6', color: '#F7941D', fontSize: '0.7rem', fontWeight: 900, display: 'inline-block' }}>GOOD</div>
@@ -344,7 +380,7 @@ const ProfitMastery = () => {
                                 ))}
                                 {topProfitableProducts.length === 0 && (
                                     <tr>
-                                        <td colSpan="4" style={{ textAlign: 'center', padding: '100px', color: '#94a3b8', fontStyle: 'italic' }}>No sales data available for this date.</td>
+                                        <td colSpan="5" style={{ textAlign: 'center', padding: '100px', color: '#94a3b8', fontStyle: 'italic' }}>No sales data available for this date.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -401,6 +437,36 @@ const ProfitMastery = () => {
                 </div>
 
             </div>
+
+            {/* FINANCIAL AUDIT SUMMARY */}
+            <div style={{ background: '#0f172a', padding: '30px', borderRadius: '24px', color: 'white', marginTop: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                <h4 style={{ fontSize: '1.2rem', fontWeight: 950, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Briefcase size={20} color="#FFB84D" /> Financial Audit Summary
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr 1fr' : 'repeat(5, 1fr)', gap: '20px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800 }}>INVOICES GENERATED</span>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 950, marginTop: '8px' }}>{validSalesCount}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800 }}>TOTAL CASH SALES</span>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 950, color: '#4ade80', marginTop: '8px' }}>Rs {totalCash.toLocaleString()}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800 }}>TOTAL CREDIT (KHATTA)</span>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 950, color: '#f87171', marginTop: '8px' }}>Rs {totalCredit.toLocaleString()}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800 }}>GROSS REVENUE</span>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 950, color: '#38bdf8', marginTop: '8px' }}>Rs {totalRevenue.toLocaleString()}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,184,77,0.3)' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 800 }}>OVERALL NET PROFIT</span>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 950, color: '#FFB84D', marginTop: '8px' }}>Rs {totalNetProfit.toLocaleString()}</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 };
