@@ -80,28 +80,40 @@ function Invoice() {
       let rows = [];
 
       if (isNumeric) {
-        // Search by exact invoice id first (fast, indexed) — no full-table load
-        const { data, error } = await db
+        // 1) exact invoice id match
+        const exact = await db
           .from('sales')
           .select('*, sale_items(*)')
           .eq('id', Number(q))
           .is('deleted_at', null)
-          .limit(30);
-        if (error) throw error;
-        rows = data || [];
-      }
+          .limit(5);
+        if (exact.error) throw exact.error;
+        rows = exact.data || [];
 
-      // If not numeric, or numeric id gave nothing, search by customer name
-      if (rows.length === 0) {
-        const { data, error } = await db
+        // 2) if the exact id gave nothing, the user probably typed the SHORT
+        //    number shown on the receipt (last digits of the id). Match the id
+        //    that ENDS WITH what they typed — cast id to text and use LIKE.
+        if (rows.length === 0) {
+          const like = await db
+            .from('sales')
+            .select('*, sale_items(*)')
+            .ilike('id_text', `%${q}`)   // handled server-side as id::text
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false })
+            .limit(30);
+          if (!like.error) rows = like.data || [];
+        }
+      } else {
+        // text query -> search by customer name
+        const byName = await db
           .from('sales')
           .select('*, sale_items(*)')
           .ilike('customer_name', `%${q}%`)
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(30);
-        if (error) throw error;
-        rows = data || [];
+        if (byName.error) throw byName.error;
+        rows = byName.data || [];
       }
 
       setReprintResults((rows || []).slice(0, 30));

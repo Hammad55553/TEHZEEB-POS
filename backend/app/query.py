@@ -56,24 +56,27 @@ def _build_where(filters: list[dict], params: list) -> str:
         # basic identifier guard
         if not col.replace("_", "").isalnum():
             raise ValueError(f"bad column: {col}")
+        # virtual column: id_text -> id::text (lets us match a numeric id as text,
+        # e.g. invoice search by the short trailing number)
+        col_sql = "id::text" if col == "id_text" else col
         if op == "is":
             if val is None:
-                clauses.append(f"{col} IS NULL")
+                clauses.append(f"{col_sql} IS NULL")
             else:
-                clauses.append(f"{col} IS %s"); params.append(val)
+                clauses.append(f"{col_sql} IS %s"); params.append(val)
         elif op == "not_is":
             if val is None:
-                clauses.append(f"{col} IS NOT NULL")
+                clauses.append(f"{col_sql} IS NOT NULL")
             else:
-                clauses.append(f"{col} IS NOT %s"); params.append(val)
+                clauses.append(f"{col_sql} IS NOT %s"); params.append(val)
         elif op == "in":
             vals = val if isinstance(val, list) else [val]
             ph = ",".join(["%s"] * len(vals)) or "NULL"
-            clauses.append(f"{col} IN ({ph})"); params.extend(vals)
+            clauses.append(f"{col_sql} IN ({ph})"); params.extend(vals)
         elif op in OPS:
             if op == "ilike" and val is not None and "%" not in str(val):
                 val = f"%{val}%"
-            clauses.append(f"{col} {OPS[op]} %s"); params.append(val)
+            clauses.append(f"{col_sql} {OPS[op]} %s"); params.append(val)
         else:
             raise ValueError(f"unsupported op: {op}")
     return " WHERE " + " AND ".join(clauses)

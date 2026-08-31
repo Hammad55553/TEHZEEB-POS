@@ -575,6 +575,14 @@ const POS = () => {
 
             dispatch(setInventory(updatedInventory));
 
+            // 4b. Add the new sale to Redux so it appears instantly in invoice
+            //     history / reprint without needing an app restart or refresh.
+            dispatch(addSale({
+                ...(savedSale || saleData),
+                id: finalSaleId,
+                sale_items: saleItemsData,
+            }));
+
             // 5. Update Shift Stats
             dispatch(updateShiftStats({ sale: finalTotal }));
             const { data: currentShift } = await db
