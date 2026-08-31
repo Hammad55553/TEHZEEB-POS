@@ -9,6 +9,23 @@ from .db import init_pool, close_pool
 from .routers import inventory, sales, users, orders, reports, party, expenses, shifts
 
 app = FastAPI(title=config.APP_NAME)
+
+# MEMORY: run garbage collection periodically so the long-running local server
+# releases freed objects instead of letting RAM creep up over a busy day.
+import gc as _gc
+from starlette.middleware.base import BaseHTTPMiddleware
+_req_counter = {"n": 0}
+
+class _PeriodicGC(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        _req_counter["n"] += 1
+        if _req_counter["n"] % 200 == 0:   # every 200 requests
+            _gc.collect()
+        return response
+
+app.add_middleware(_PeriodicGC)
+
 app.include_router(inventory.router)
 app.include_router(sales.router)
 app.include_router(users.router)
