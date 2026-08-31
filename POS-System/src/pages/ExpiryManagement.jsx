@@ -22,31 +22,44 @@ const ExpiryManagement = () => {
     const [page, setPage] = React.useState(1);
     const PAGE_SIZE = 100;
 
+    // Robust expiry parser: accepts expiry / expiry_date, YYYY-MM-DD or DD/MM/YYYY,
+    // returns days-left or null if there is no valid expiry.
+    const daysLeft = (item) => {
+        let raw = item.expiry || item.expiry_date || '';
+        if (!raw) return null;
+        raw = String(raw).trim();
+        let d;
+        if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+            d = new Date(raw.slice(0, 10) + 'T00:00:00');
+        } else if (/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/.test(raw)) {
+            const parts = raw.split(/[\/-]/);          // DD/MM/YYYY
+            d = new Date(`${parts[2]}-${String(parts[1]).padStart(2,'0')}-${String(parts[0]).padStart(2,'0')}T00:00:00`);
+        } else {
+            d = new Date(raw);
+        }
+        if (isNaN(d.getTime())) return null;
+        return Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+    };
+
     const processedItems = useMemo(() => {
         return items.filter(item => {
-            if (!item.expiry) return activeTab === 'All';
-            
-            const expiryDate = new Date(item.expiry);
-            const today = new Date();
-            const days = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-            
+            const matchesSearch = (item.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+            if (!matchesSearch) return false;
+
+            const days = daysLeft(item);
             const criticalLimit = item.critical_days || 60;
             const preCriticalLimit = 120;
 
-            const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-            
-            let matchesTab = true;
-            if (activeTab === 'Critical') {
-                matchesTab = days <= criticalLimit;
-            } else if (activeTab === 'Pre-Critical') {
-                matchesTab = days > criticalLimit && days <= preCriticalLimit;
-            }
-
-            return matchesSearch && matchesTab;
+            if (activeTab === 'All') return true;
+            if (days === null) return false;   // no valid expiry -> only under All
+            if (activeTab === 'Critical') return days <= criticalLimit;
+            if (activeTab === 'Pre-Critical') return days > criticalLimit && days <= preCriticalLimit;
+            return true;
         }).sort((a, b) => {
-            const daysA = Math.ceil((new Date(a.expiry) - new Date()) / (1000 * 60 * 60 * 24));
-            const daysB = Math.ceil((new Date(b.expiry) - new Date()) / (1000 * 60 * 60 * 24));
-            return daysA - daysB;
+            const da = daysLeft(a); const dbb = daysLeft(b);
+            if (da === null) return 1;
+            if (dbb === null) return -1;
+            return da - dbb;
         });
     }, [items, searchTerm, activeTab]);
 

@@ -298,3 +298,8 @@ CREATE INDEX IF NOT EXISTS idx_expenses_created      ON expenses(created_at);
 CREATE INDEX IF NOT EXISTS idx_expenses_deleted      ON expenses(deleted_at);
 -- Suppliers
 CREATE INDEX IF NOT EXISTS idx_suppliers_deleted     ON suppliers(deleted_at);
+
+-- shortage: frontend uses demand_count / status / notes (add for compatibility)
+ALTER TABLE shortage ADD COLUMN IF NOT EXISTS demand_count INTEGER DEFAULT 1;
+ALTER TABLE shortage ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+ALTER TABLE shortage ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
