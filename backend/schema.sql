@@ -146,6 +146,9 @@ CREATE TABLE IF NOT EXISTS shortage (
     qty           NUMERIC(12,2) DEFAULT 0,
     note          TEXT,
     resolved      BOOLEAN DEFAULT false,
+    demand_count  INT DEFAULT 1,
+    status        VARCHAR(50) DEFAULT 'Pending',
+    notes         TEXT,
     data          JSONB DEFAULT '{}'::jsonb,
     created_at    TIMESTAMPTZ DEFAULT now()
 );
@@ -303,3 +306,8 @@ CREATE INDEX IF NOT EXISTS idx_suppliers_deleted     ON suppliers(deleted_at);
 ALTER TABLE shortage ADD COLUMN IF NOT EXISTS demand_count INTEGER DEFAULT 1;
 ALTER TABLE shortage ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
 ALTER TABLE shortage ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT '';
+
+-- Database Migration for existing shortage tables
+ALTER TABLE shortage ADD COLUMN IF NOT EXISTS demand_count INT DEFAULT 1;
+ALTER TABLE shortage ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending';
+ALTER TABLE shortage ADD COLUMN IF NOT EXISTS notes TEXT;
