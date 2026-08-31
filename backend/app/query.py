@@ -77,6 +77,22 @@ def _build_where(filters: list[dict], params: list) -> str:
             if op == "ilike" and val is not None and "%" not in str(val):
                 val = f"%{val}%"
             clauses.append(f"{col_sql} {OPS[op]} %s"); params.append(val)
+        elif op == "or":
+            or_clauses = []
+            for item in val.split(","):
+                parts = item.split(".")
+                if len(parts) >= 3:
+                    c = parts[0]
+                    o = parts[1]
+                    v = ".".join(parts[2:])
+                    c_sql = "id::text" if c == "id_text" else c
+                    if o in OPS:
+                        if o == "ilike" and "%" not in str(v):
+                            v = f"%{v}%"
+                        or_clauses.append(f"{c_sql} {OPS[o]} %s")
+                        params.append(v)
+            if or_clauses:
+                clauses.append("(" + " OR ".join(or_clauses) + ")")
         else:
             raise ValueError(f"unsupported op: {op}")
     return " WHERE " + " AND ".join(clauses)

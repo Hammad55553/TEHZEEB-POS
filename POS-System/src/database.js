@@ -133,6 +133,7 @@ class QueryBuilder {
 
   // database: .is('deleted_at', null)  and  .not('deleted_at','is',null)
   is(col, value) { this._filters.push({ col, op: 'is', value }); return this; }
+  or(conditionString) { this._filters.push({ col: 'or', op: 'or', value: conditionString }); return this; }
   not(col, op, value) {
     if (op === 'is') this._filters.push({ col, op: 'not_is', value });
     else this._filters.push({ col, op: 'neq', value });
