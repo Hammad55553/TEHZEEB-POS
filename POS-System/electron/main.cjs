@@ -106,7 +106,13 @@ app.whenReady().then(() => {
   createWindow();
 
   if (!isDev) {
+    // Check for updates on startup...
     autoUpdater.checkForUpdatesAndNotify();
+    // ...and keep checking every 30 minutes while the app is running, so a new
+    // update is found WITHOUT the user having to close and reopen the app.
+    setInterval(() => {
+      try { autoUpdater.checkForUpdatesAndNotify(); } catch (e) {}
+    }, 30 * 60 * 1000);
   }
 
   app.on('activate', () => {

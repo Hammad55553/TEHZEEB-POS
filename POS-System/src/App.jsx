@@ -353,6 +353,30 @@ function AppContent() {
     }
   }, [isAuthenticated]);
 
+  // GLOBAL UPDATE NOTIFICATIONS — works on ANY screen (not just Settings), so a
+  // new update found while the app is running is shown immediately with a
+  // one-click Restart to install. No need to close & reopen the app.
+  useEffect(() => {
+    let ipc;
+    try { ipc = window.require ? window.require('electron').ipcRenderer : null; } catch (e) { ipc = null; }
+    if (!ipc) return;
+    const onAvailable = () => toast('New update found — downloading…', { icon: '⬇️', id: 'app-update', duration: 6000 });
+    const onDownloaded = () => toast((t) => (
+      <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        Update ready!
+        <button onClick={() => { try { ipc.send('restart-app'); } catch (e) {} }}
+          style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 800, cursor: 'pointer' }}>
+          Restart &amp; Install
+        </button>
+      </span>
+    ), { id: 'app-update', duration: 999999 });
+    ipc.on('update-available', onAvailable);
+    ipc.on('update-downloaded', onDownloaded);
+    return () => {
+      try { ipc.removeListener('update-available', onAvailable); ipc.removeListener('update-downloaded', onDownloaded); } catch (e) {}
+    };
+  }, []);
+
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
