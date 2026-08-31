@@ -308,7 +308,10 @@ const POS = () => {
         // when nothing is searched and no category is picked. Show results only
         // once the user searches or selects a category.
         if (!q && selectedCategory === 'All') return [];
-        return inventory.filter(item => {
+        const out = [];
+        const LIMIT = 50; // POS only needs the top matches — never render hundreds
+        for (let i = 0; i < inventory.length; i++) {
+            const item = inventory[i];
             const matchesSearch = !q ||
                 item.name?.toLowerCase().includes(q) ||
                 String(item.id).toLowerCase().includes(q) ||
@@ -316,8 +319,12 @@ const POS = () => {
                 (item.manufacturer && item.manufacturer.toLowerCase().includes(q)) ||
                 (item.batch_no && item.batch_no.toLowerCase().includes(q));
             const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
-            return matchesSearch && matchesCat;
-        });
+            if (matchesSearch && matchesCat) {
+                out.push(item);
+                if (out.length >= LIMIT) break; // stop early — fast even with 10k products
+            }
+        }
+        return out;
     }, [searchTerm, selectedCategory, inventory]);
 
     const addToCart = (product) => {
