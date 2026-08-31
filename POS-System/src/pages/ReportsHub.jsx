@@ -405,10 +405,14 @@ function ReportsHub() {
       if (!items.length) rev = num(s?.total); // fallback when no line items
       const profit = rev - cost;
       totRev += rev; totCost += cost;
+      const totalQty = items.reduce((a, it) => a + num(it?.qty), 0);
       rows.push({
         date: fmtDate(s?.created_at),
         inv: s?.id ?? '-',
         customer: s?.customer_name || 'Walk-in',
+        seller: s?.seller_name || s?.cashier || '-',
+        status: s?.status || '-',
+        qty: totalQty,
         rev, cost, profit,
       });
     });
@@ -731,8 +735,8 @@ function ReportsHub() {
         return (
           <ReportShell
             title="Profit Report" help={HELP.profit} showHelp={showHelp} onToggleHelp={() => setShowHelp(!showHelp)}
-            onExport={() => downloadCSV('profit_report.csv', ['Date', 'Invoice #', 'Customer', 'Revenue', 'Cost', 'Profit'],
-              r.rows.map((x) => [x.date, x.inv, x.customer, x.rev, x.cost, x.profit]))}
+            onExport={() => downloadCSV('profit_report.csv', ['Date', 'Invoice #', 'Customer', 'Operator', 'Status', 'Qty', 'Revenue', 'Cost', 'Profit'],
+              r.rows.map((x) => [x.date, x.inv, x.customer, x.seller, x.status, x.qty, x.rev, x.cost, x.profit]))}
             cards={[
               { label: 'Total Revenue', value: 'Rs ' + money(Math.round(r.totRev)), accent: C.orange },
               { label: 'Total Cost', value: 'Rs ' + money(Math.round(r.totCost)), accent: C.red },
@@ -741,9 +745,9 @@ function ReportsHub() {
             ]}
           >
             <Table
-              headers={['Date', 'Invoice #', 'Customer', 'Revenue', 'Cost', 'Profit']}
-              rows={r.rows.map((x) => [x.date, x.inv, x.customer, 'Rs ' + money(Math.round(x.rev)), 'Rs ' + money(Math.round(x.cost)), 'Rs ' + money(Math.round(x.profit))])}
-              totalsRow={r.rows.length ? ['Total', '', '', 'Rs ' + money(Math.round(r.totRev)), 'Rs ' + money(Math.round(r.totCost)), 'Rs ' + money(Math.round(r.totProfit))] : null}
+              headers={['Date', 'Invoice #', 'Customer', 'Operator', 'Status', 'Qty', 'Revenue', 'Cost', 'Profit']}
+              rows={r.rows.map((x) => [x.date, x.inv, x.customer, x.seller, x.status, x.qty, 'Rs ' + money(Math.round(x.rev)), 'Rs ' + money(Math.round(x.cost)), 'Rs ' + money(Math.round(x.profit))])}
+              totalsRow={r.rows.length ? ['Total', '', '', '', '', '', 'Rs ' + money(Math.round(r.totRev)), 'Rs ' + money(Math.round(r.totCost)), 'Rs ' + money(Math.round(r.totProfit))] : null}
             />
           </ReportShell>
         );

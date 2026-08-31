@@ -505,15 +505,26 @@ const POS = () => {
 
             const finalSaleId = savedSale?.id || saleId;
 
-            // 2. Save sale items
-            const saleItemsData = cart.map(item => ({
-                sale_id: finalSaleId,
-                product_id: item.id,
-                qty: item.quantity,
-                price: item.custom_price !== undefined ? item.custom_price : (isWholesaleMode ? (item.wholesale_price || item.price) : item.price),
-                buy_price: item.buy_price || 0,
-                reason: item.reason || null
-            }));
+            // 2. Save sale items — include cost_price (for Profit report), name and
+            //    inventory_id. Cost comes from the live inventory record so profit
+            //    is accurate even if the cart didn't carry a cost value.
+            const saleItemsData = cart.map(item => {
+                const inv = inventory.find(i => i.id === item.id) || {};
+                const cost = (Number(item.buy_price) || Number(inv.cost_price) || Number(inv.buy_price) || 0);
+                const sellPrice = item.custom_price !== undefined ? item.custom_price : (isWholesaleMode ? (item.wholesale_price || item.price) : item.price);
+                return {
+                    sale_id: finalSaleId,
+                    inventory_id: item.id,
+                    product_id: item.id,
+                    name: item.name || inv.name || '',
+                    qty: item.quantity,
+                    price: sellPrice,
+                    cost_price: cost,
+                    buy_price: cost,
+                    total: (Number(sellPrice) || 0) * (Number(item.quantity) || 0),
+                    reason: item.reason || null
+                };
+            });
 
             const { error: itemsError } = await db
                 .from('sale_items')
