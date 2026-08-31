@@ -292,12 +292,15 @@ function ReportsHub() {
       setLoading(true);
       try {
         const results = await Promise.allSettled([
-          db.from('sales').select('*, sale_items(*)').is('deleted_at', null),
+          // Reports use recent data. Pull the latest N rows instead of the whole
+          // history so the backend never loads thousands of sales + lakhs of
+          // sale_items into memory at once (that spiked server RAM to ~4GB).
+          db.from('sales').select('*, sale_items(*)').is('deleted_at', null).order('id', { ascending: false }).limit(2000),
           db.from('inventory').select('*'),
-          db.from('stock_moves').select('*'),
-          db.from('orders').select('*'),
+          db.from('stock_moves').select('*').order('id', { ascending: false }).limit(3000),
+          db.from('orders').select('*').order('id', { ascending: false }).limit(2000),
           db.from('customers').select('*'),
-          db.from('expenses').select('*'),
+          db.from('expenses').select('*').order('id', { ascending: false }).limit(3000),
         ]);
         if (!mounted) return;
 
