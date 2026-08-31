@@ -33,6 +33,9 @@ const ShiftManagement = () => {
     const [closingCash, setClosingCash] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [detailShift, setDetailShift] = useState(null);
+    const NOTE_VALUES = [5000, 1000, 500, 100, 50, 20, 10, 5];
+    const [noteCounts, setNoteCounts] = useState({});
+    const cashFromNotes = NOTE_VALUES.reduce((sum, v) => sum + v * (Number(noteCounts[v]) || 0), 0);
 
     const handleStart = async (e) => {
         e.preventDefault();
@@ -87,13 +90,15 @@ const ShiftManagement = () => {
                 .update({
                     closing_cash: finalClosingCash,
                     end_time: new Date().toISOString(),
-                    status: 'closed'
+                    status: 'closed',
+                    data: { ...(activeShift.data || {}), note_breakdown: noteCounts }
                 })
                 .eq('id', activeShift.id);
             
             if (error) throw error;
             
             dispatch(endShift({ closingCash: finalClosingCash }));
+            setNoteCounts({});
             toast.success('Shift closed successfully');
         } catch (err) {
             console.error(err);
@@ -229,9 +234,36 @@ const ShiftManagement = () => {
                                         <span style={{ fontSize: '0.7rem', fontWeight: 900, color: '#ef4444', background: '#fee2e2', padding: '4px 12px', borderRadius: '50px' }}>CRITICAL STEP</span>
                                     </div>
                                     <div style={{ padding: '30px' }}>
+                                        {/* NOTE DENOMINATION COUNTER */}
+                                        <div style={{ width: '100%', marginBottom: 18, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 16 }}>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#64748b', marginBottom: 12 }}>CASH COUNTER — kitne note (optional)</div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
+                                                {NOTE_VALUES.map(v => (
+                                                    <div key={v} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '8px 10px' }}>
+                                                        <span style={{ fontSize: '0.8rem', fontWeight: 900, color: '#F7941D', minWidth: 44 }}>{v}</span>
+                                                        <span style={{ color: '#cbd5e1' }}>×</span>
+                                                        <input type="number" min="0" placeholder="0"
+                                                            value={noteCounts[v] || ''}
+                                                            onChange={(e) => {
+                                                                const nc = { ...noteCounts, [v]: e.target.value };
+                                                                setNoteCounts(nc);
+                                                                const total = NOTE_VALUES.reduce((sum, nv) => sum + nv * (Number(nc[nv]) || 0), 0);
+                                                                setClosingCash(String(total));
+                                                            }}
+                                                            style={{ width: '100%', padding: '6px 8px', borderRadius: 8, border: '1px solid #e2e8f0', fontWeight: 800, textAlign: 'right' }} />
+                                                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', minWidth: 60, textAlign: 'right' }}>{((Number(noteCounts[v])||0)*v).toLocaleString()}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {cashFromNotes > 0 && (
+                                                <div style={{ marginTop: 12, textAlign: 'right', fontSize: '0.9rem', fontWeight: 900, color: '#16a34a' }}>
+                                                    Counter Total: Rs {cashFromNotes.toLocaleString()}
+                                                </div>
+                                            )}
+                                        </div>
                                         <form onSubmit={handleEnd} style={{ display: 'flex', flexDirection: window.innerWidth <= 768 ? 'column' : 'row', gap: '20px', alignItems: 'flex-end' }}>
                                             <div style={{ flex: 1, width: '100%' }}>
-                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', marginBottom: '10px' }}>PHYSICAL CASH COUNT (Rs)</label>
+                                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', marginBottom: '10px' }}>PHYSICAL CASH COUNT (Rs) — auto-fills from counter</label>
                                                 <input 
                                                     type="number"
                                                     required
@@ -393,6 +425,17 @@ const ShiftManagement = () => {
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8' }}>Status</span>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 900, color: sh.status === 'closed' ? '#64748b' : '#16a34a', textTransform: 'uppercase' }}>{sh.status || 'open'}</span>
                                 </div>
+                                {sh.data && sh.data.note_breakdown && Object.values(sh.data.note_breakdown).some(v => Number(v) > 0) && (
+                                    <div style={{ marginTop: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: 12 }}>
+                                        <div style={{ fontSize: '0.72rem', fontWeight: 900, color: '#64748b', marginBottom: 6 }}>CASH COUNT (NOTES)</div>
+                                        {Object.entries(sh.data.note_breakdown).filter(([,c]) => Number(c) > 0).map(([note, c]) => (
+                                            <div key={note} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', padding: '2px 0' }}>
+                                                <span style={{ color: '#64748b', fontWeight: 700 }}>Rs {note} × {c}</span>
+                                                <span style={{ fontWeight: 800 }}>Rs {(Number(note) * Number(c)).toLocaleString()}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                                 <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 8 }}>
                                     Opened: {new Date(sh.start_time || sh.opened_at || sh.startTime).toLocaleString()}<br/>
                                     {(sh.end_time || sh.closed_at) ? 'Closed: ' + new Date(sh.end_time || sh.closed_at).toLocaleString() : 'Not closed yet'}

@@ -28,7 +28,7 @@ const Sidebar = () => {
         { to: '/invoice', label: 'Invoice', icon: History, perm: 'pos' },
         { to: '/orders-center', label: 'Orders', icon: Truck, perm: 'inventory' },
         { to: '/inventory', label: 'Products', icon: Package, perm: 'inventory' },
-        { to: '/party', label: 'Party', icon: Users, perm: 'credit' },
+        { to: '/party', label: 'Vendors (Party)', icon: Users, perm: 'credit' },
         { to: '/credit', label: 'Khata', icon: Wallet, perm: 'credit' },
         { to: '/history', label: 'Invoices', icon: FileText, perm: 'pos' },
         { to: '/expiry', label: 'Expiry', icon: ShieldAlert, perm: 'inventory' },

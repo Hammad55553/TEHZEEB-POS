@@ -207,7 +207,7 @@ function Party() {
   const [tab, setTab] = useState('parties');
 
   const tabs = [
-    { key: 'parties', label: 'Parties', icon: <Users size={16} /> },
+    { key: 'parties', label: 'Vendors (Parties)', icon: <Users size={16} /> },
     { key: 'tasks', label: 'Tasks', icon: <ClipboardList size={16} /> },
     { key: 'promises', label: 'Promises', icon: <Handshake size={16} /> },
     { key: 'calc', label: 'Cash Calculator', icon: <Calculator size={16} /> },
@@ -222,7 +222,7 @@ function Party() {
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: mob ? 20 : 26, fontWeight: 900, color: C.maroon }}>Tehzeeb Sweets &amp; Super Store</div>
-        <div style={{ fontSize: 13, color: C.muted, fontWeight: 600 }}>Parties, Tasks, Promises &amp; Cash Management</div>
+        <div style={{ fontSize: 13, color: C.muted, fontWeight: 600 }}>Vendors (Parties), Tasks, Promises &amp; Cash Management</div>
       </div>
 
       {/* Tab bar */}
@@ -502,10 +502,10 @@ function TasksTab({ mob }) {
   const load = async () => {
     setLoading(true);
     try {
-      const { data, error } = await db.from('tasks').select().is('deleted_at', null).order('id', { ascending: false });
+      const { data, error } = await db.from('tasks').select().is('deleted_at', null).order('id', { ascending: false }).limit(1000);
       if (error) throw error;
       setTasks(Array.isArray(data) ? data : []);
-      const { data: cdata } = await db.from('customers').select().is('deleted_at', null).order('id', { ascending: false });
+      const { data: cdata } = await db.from('customers').select('id,name').is('deleted_at', null).order('id', { ascending: false }).limit(3000);
       setCustomers(Array.isArray(cdata) ? cdata : []);
     } catch (e) {
       toast.error('Failed to load tasks');
@@ -676,10 +676,10 @@ function PromisesTab({ mob }) {
   const load = async () => {
     setLoading(true);
     try {
-      const { data, error } = await db.from('promises').select().is('deleted_at', null).order('id', { ascending: false });
+      const { data, error } = await db.from('promises').select().is('deleted_at', null).order('id', { ascending: false }).limit(1000);
       if (error) throw error;
       setPromises(Array.isArray(data) ? data : []);
-      const { data: cdata } = await db.from('customers').select().is('deleted_at', null).order('id', { ascending: false });
+      const { data: cdata } = await db.from('customers').select('id,name').is('deleted_at', null).order('id', { ascending: false }).limit(3000);
       setCustomers(Array.isArray(cdata) ? cdata : []);
     } catch (e) {
       toast.error('Failed to load promises');
@@ -919,9 +919,11 @@ function CashDetailsTab({ mob }) {
   const load = async () => {
     setLoading(true);
     try {
-      const { data: sdata } = await db.from('sales').select().order('id', { ascending: false });
+      // Only need recent sales for today's cash — cap it so this never hangs
+      // the screen or loads the whole history into memory.
+      const { data: sdata } = await db.from('sales').select().order('id', { ascending: false }).limit(1000);
       setSales(Array.isArray(sdata) ? sdata : []);
-      const { data: shdata } = await db.from('shifts').select().order('id', { ascending: false });
+      const { data: shdata } = await db.from('shifts').select().order('id', { ascending: false }).limit(200);
       const list = Array.isArray(shdata) ? shdata : [];
       const open = list.find((s) => s && (s.status === 'open' || !s.closed_at));
       setShift(open || null);
@@ -1024,7 +1026,7 @@ function SalaryTab({ mob }) {
   const load = async () => {
     setLoading(true);
     try {
-      const { data, error } = await db.from('salaries').select().is('deleted_at', null).order('id', { ascending: false });
+      const { data, error } = await db.from('salaries').select().is('deleted_at', null).order('id', { ascending: false }).limit(1000);
       if (error) throw error;
       setSalaries(Array.isArray(data) ? data : []);
     } catch (e) {
