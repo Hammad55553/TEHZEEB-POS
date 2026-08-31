@@ -26,42 +26,53 @@ const ProductInsights = () => {
     const { user } = useSelector(state => state.auth);
     const isAdmin = user?.role === 'admin';
 
+    const { history: allSales } = useSelector(state => state.sales);
+    const { items: inventory } = useSelector(state => state.inventory);
+
     const [transactions, setTransactions] = useState([]);
     const [inventoryItem, setInventoryItem] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    // Fetch All Transactions for this product
+    // Fetch All Transactions for this product locally from Redux
     useEffect(() => {
-        const fetchProductData = async () => {
-            if (!productName) return;
-            setLoading(true);
-            try {
-                // 1. Fetch transactions
-                const { data, error } = await db
-                    .from('sale_items')
-                    .select('*, sales(*)')
-                    .ilike('name', `%${productName}%`);
+        if (!productName) return;
+        setLoading(true);
+        try {
+            const pName = productName.toLowerCase();
+            
+            // 1. Build transactions from local Sales History
+            const newTransactions = [];
+            (allSales || []).forEach(sale => {
+                const items = sale.sale_items || sale.items || [];
+                items.forEach(item => {
+                    if (item.name?.toLowerCase().includes(pName)) {
+                        newTransactions.push({
+                            ...item,
+                            sales: {
+                                id: sale.id,
+                                invoice_no: sale.invoice_no,
+                                status: sale.status,
+                                created_at: sale.created_at || sale.date,
+                                customer_name: sale.customer_name || sale.customerName,
+                                seller_name: sale.seller_name || sale.sellerName
+                            }
+                        });
+                    }
+                });
+            });
+            setTransactions(newTransactions);
 
-                if (error) throw error;
-                setTransactions(data || []);
-
-                // 2. Fetch live inventory data for stock
-                const { data: invData, error: invError } = await db
-                    .from('inventory')
-                    .select('*')
-                    .ilike('name', `%${productName}%`)
-                    .single();
-
-                if (!invError) setInventoryItem(invData);
-            } catch (err) {
-                console.error("Insight Fetch Error:", err);
-            } finally {
-                setLoading(false);
+            // 2. Fetch live inventory data for stock from local Redux Inventory
+            const invData = (inventory || []).find(i => i.name?.toLowerCase().includes(pName));
+            if (invData) {
+                setInventoryItem(invData);
             }
-        };
-
-        fetchProductData();
-    }, [productName]);
+        } catch (err) {
+            console.error("Insight Fetch Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [productName, allSales, inventory]);
 
     const fetchFullSale = async (saleId) => {
         try {
