@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+fix_db*.py
+test_insert*.py
