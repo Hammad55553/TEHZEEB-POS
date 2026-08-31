@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { db } from '../database';
+import Pagination from '../components/Pagination';
 import toast from 'react-hot-toast';
 import { ClipboardList, ShoppingCart, RotateCcw, Truck, Package, Building2, Info, Search, X, Plus, Minus, Trash2, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 
@@ -552,6 +553,8 @@ function AllOrders({ orders, loading, onRefresh, isSmall }) {
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [busyId, setBusyId] = useState(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 100;
 
   const filtered = useMemo(() => {
     return (orders || []).filter(o => {
@@ -560,6 +563,14 @@ function AllOrders({ orders, loading, onRefresh, isSmall }) {
       return true;
     });
   }, [orders, typeFilter, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedOrders = useMemo(
+    () => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filtered, safePage]
+  );
+  React.useEffect(() => { setPage(1); }, [typeFilter, statusFilter]);
 
   const setStatus = async (id, status) => {
     setBusyId(id);
@@ -649,7 +660,7 @@ function AllOrders({ orders, loading, onRefresh, isSmall }) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {filtered.map(o => {
+          {pagedOrders.map(o => {
             const meta = ORDER_TYPES[o.order_type] || { badge: C.muted, badgeText: o.order_type, label: o.order_type };
             const status = o.status || 'pending';
             const isPending = status === 'pending';
@@ -716,6 +727,14 @@ function AllOrders({ orders, loading, onRefresh, isSmall }) {
           })}
         </div>
       )}
+
+      <Pagination
+        page={safePage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        pageSize={PAGE_SIZE}
+        onChange={setPage}
+      />
     </div>
   );
 }
